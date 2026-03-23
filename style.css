@@ -1,0 +1,1235 @@
+/* ================================================================
+   StyleGuard — style.css  ·  Swiss Editorial theme
+   Inspired by the International Typographic Style (1950s–70s)
+   Müller-Brockmann grid discipline · Univers/Helvetica lineage
+   Palette: pure white · ink black · signal red · cool grey
+   No decoration. No ornament. Only structure, type, and grid.
+   Font: Barlow Condensed (display) · Barlow (UI) · IBM Plex Mono
+   ================================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+/* ──────────────────────────────────────────
+      Design tokens
+      Inspired by the Zurich school of graphic design:
+      every value is deliberately chosen, nothing arbitrary
+   ────────────────────────────────────────── */
+:root {
+  /* ── Core palette — the only three colours that matter ── */
+  --ink: #1a1a1a; /* near-black: type, borders */
+  --paper: #ffffff; /* pure white: surfaces */
+  --signal: #e63329; /* Swiss red: single accent only */
+  --signal-dark: #bf1f16; /* red hover/active */
+  --signal-pale: rgba(230, 51, 41, 0.07);
+  --signal-mid: rgba(230, 51, 41, 0.15);
+
+  /* ── Grey scale — disciplined, not decorative ── */
+  --grey-100: #f4f4f4; /* page wash */
+  --grey-200: #ebebeb; /* panel backgrounds */
+  --grey-300: #d6d6d6; /* borders, dividers */
+  --grey-400: #b8b8b8; /* disabled states */
+  --grey-500: #8c8c8c; /* muted text */
+  --grey-600: #5a5a5a; /* secondary text */
+  --grey-700: #3a3a3a; /* strong secondary */
+
+  /* ── Violation colours ── */
+  /* Passive voice — warm orange: a "caution" signal */
+  --v-passive-bg: rgba(220, 100, 20, 0.08);
+  --v-passive-bd: rgba(200, 80, 0, 0.35);
+  --v-passive-tx: #8b3a00;
+  --v-passive-line: #c85a00;
+  --v-passive-chip: #fff4ec;
+  --v-passive-ctx: #7a2d00;
+  --v-passive-cbd: #f5c09a;
+
+  /* Weak verbs — deep teal: a "note" signal */
+  --v-weak-bg: rgba(0, 120, 110, 0.07);
+  --v-weak-bd: rgba(0, 96, 88, 0.32);
+  --v-weak-tx: #005a52;
+  --v-weak-line: #007a70;
+  --v-weak-chip: #e8f6f5;
+  --v-weak-ctx: #004d44;
+  --v-weak-cbd: #80ccc6;
+
+  /* Long sentences — signal red: same as brand accent */
+  --v-long-bg: rgba(230, 51, 41, 0.07);
+  --v-long-bd: rgba(200, 30, 20, 0.3);
+  --v-long-tx: var(--signal-dark);
+  --v-long-line: var(--signal);
+  --v-long-chip: #fff0ef;
+  --v-long-ctx: #8b0e09;
+  --v-long-cbd: #f5a09c;
+
+  /* Banned / abbrev — steel blue: an "info" signal */
+  --v-banned-bg: rgba(30, 90, 180, 0.07);
+  --v-banned-bd: rgba(20, 70, 160, 0.28);
+  --v-banned-tx: #1a3f80;
+  --v-banned-line: #2255b8;
+  --v-banned-chip: #f0f4ff;
+  --v-banned-ctx: #102860;
+  --v-banned-cbd: #90a8e0;
+
+  /* ── Typography — Helvetica-lineage stack ── */
+  --font-display: "Barlow Condensed", "Arial Narrow", Helvetica, Arial,
+    sans-serif;
+  --font-ui: "Barlow", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+
+  /* ── Modular spacing scale (base 8px) ── */
+  --u: 8px; /* base unit */
+  --u-half: 4px;
+  --sp-1: 8px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 32px;
+  --sp-5: 40px;
+  --sp-6: 48px;
+  --sp-8: 64px;
+
+  /* ── Geometry — Swiss design uses hard corners, thin rules ── */
+  --r-none: 0;
+  --r-sm: 0; /* Swiss style: no rounding anywhere */
+  --r-md: 0;
+  --r-lg: 0;
+  --r-pill: 0;
+
+  /* ── Rules (borders) ── */
+  --rule-thin: 1px solid var(--ink);
+  --rule-thick: 3px solid var(--ink);
+  --rule-red: 3px solid var(--signal);
+  --rule-grey: 1px solid var(--grey-300);
+
+  /* ── Transitions ── */
+  --t-fast: 0.1s;
+  --t-mid: 0.2s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Layout ── */
+  --header-h: 64px;
+  --max-w: 1440px;
+}
+
+/* ──────────────────────────────────────────
+      Reset
+   ────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--grey-100);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+/* Swiss editorial scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--grey-200);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--grey-400);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--grey-600);
+}
+
+/* ──────────────────────────────────────────
+      Accessibility
+   ────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 1px;
+}
+
+/* ──────────────────────────────────────────
+      HEADER
+      Ink black bar · Red left stripe · No decoration
+      Pure typographic lockup — Müller-Brockmann would approve
+   ────────────────────────────────────────── */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--ink);
+  height: var(--header-h);
+  /* Thick red stripe at bottom — the single allowed flourish */
+  border-bottom: 4px solid var(--signal);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--sp-4);
+  height: 100%;
+  gap: var(--sp-3);
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  text-decoration: none;
+}
+
+/* Solid red square logomark — Swiss poster energy */
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  background: var(--signal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--t-fast) ease;
+}
+
+.brand-mark:hover {
+  background: var(--signal-dark);
+}
+
+.brand-mark-inner {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--paper);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-left: var(--sp-2);
+  /* Thin vertical rule between mark and wordmark */
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  margin-left: 12px;
+}
+
+.app-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--paper);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tagline {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 300;
+  color: var(--grey-500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* ──────────────────────────────────────────
+      BADGE
+      Swiss style: tight capsule, uppercase, strong contrast
+   ────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: transform var(--t-fast) ease, box-shadow var(--t-mid) ease;
+}
+
+/* Version in header */
+.badge--neutral {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--grey-500);
+  border-color: rgba(255, 255, 255, 0.12);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+/* Stat badges — coloured, paper background */
+.badge--passive {
+  background: var(--v-passive-chip);
+  color: var(--v-passive-ctx);
+  border-color: var(--v-passive-cbd);
+}
+.badge--passive:hover {
+  transform: translateY(-1px);
+}
+
+.badge--weak {
+  background: var(--v-weak-chip);
+  color: var(--v-weak-ctx);
+  border-color: var(--v-weak-cbd);
+}
+.badge--weak:hover {
+  transform: translateY(-1px);
+}
+
+.badge--long {
+  background: var(--v-long-chip);
+  color: var(--v-long-ctx);
+  border-color: var(--v-long-cbd);
+}
+.badge--long:hover {
+  transform: translateY(-1px);
+}
+
+.badge--banned {
+  background: var(--v-banned-chip);
+  color: var(--v-banned-ctx);
+  border-color: var(--v-banned-cbd);
+}
+.badge--banned:hover {
+  transform: translateY(-1px);
+}
+
+.badge--info {
+  background: var(--grey-200);
+  color: var(--grey-600);
+  border-color: var(--grey-300);
+}
+
+/* Total — ink on paper, bold */
+.badge--total {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  font-weight: 700;
+}
+
+.badge-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  opacity: 0.65;
+  flex-shrink: 0;
+  /* square dot — Swiss style */
+}
+
+/* ──────────────────────────────────────────
+      APP LAYOUT
+      Strict two-column grid.
+      Left: input. Right: results (larger).
+      No gap decoration — ruled by a single 1px border.
+   ────────────────────────────────────────── */
+.app-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  max-width: var(--max-w);
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-4);
+  gap: var(--sp-3);
+  align-items: stretch;
+  min-height: calc(100vh - var(--header-h) - 52px);
+}
+
+/* ──────────────────────────────────────────
+      Panel shared
+   ────────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-1);
+  min-height: 22px;
+}
+
+/* Section label — Swiss typographic numbering */
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Red number tab — pure Swiss grid reference */
+.panel-title-icon {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--paper);
+  background: var(--signal);
+  padding: 1px 6px;
+  letter-spacing: 0.06em;
+}
+
+/* ──────────────────────────────────────────
+      INPUT COLUMN
+   ────────────────────────────────────────── */
+.input-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.char-counter {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--grey-500);
+  letter-spacing: 0.04em;
+  transition: color var(--t-mid) ease;
+}
+
+/* Textarea wrapper — hard border box, red top rule */
+.textarea-wrapper {
+  position: relative;
+  background: var(--paper);
+  border: var(--rule-thin);
+  border-top: var(--rule-red);
+  overflow: hidden;
+  transition: border-color var(--t-mid) ease, box-shadow var(--t-mid) ease;
+}
+
+.textarea-wrapper:focus-within {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+/* Large, readable textarea — generous line height */
+.doc-textarea {
+  display: block;
+  width: 100%;
+  min-height: 500px;
+  resize: vertical;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.85;
+  color: var(--ink);
+  caret-color: var(--signal);
+}
+
+.doc-textarea::placeholder {
+  color: var(--grey-400);
+}
+
+.doc-textarea::-webkit-scrollbar {
+  width: 4px;
+}
+.doc-textarea::-webkit-scrollbar-track {
+  background: var(--grey-100);
+}
+.doc-textarea::-webkit-scrollbar-thumb {
+  background: var(--grey-300);
+}
+
+.textarea-corner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, transparent 50%, var(--grey-300) 50%);
+  pointer-events: none;
+}
+
+/* ──────────────────────────────────────────
+      ACTION BAR
+   ────────────────────────────────────────── */
+.action-bar {
+  display: flex;
+  gap: var(--sp-1);
+  margin-top: var(--sp-1);
+  align-items: center;
+}
+
+/* ──────────────────────────────────────────
+      BUTTONS
+      Swiss design: flat, typographic, no radius
+      Ink on paper OR paper on ink. Nothing in between.
+   ────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 10px 24px;
+  white-space: nowrap;
+  position: relative;
+  transition: background var(--t-fast) ease, color var(--t-fast) ease,
+    border-color var(--t-fast) ease, box-shadow var(--t-fast) ease,
+    transform var(--t-fast) var(--ease);
+}
+
+.btn:active {
+  transform: translateY(1px) !important;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+/* ── Primary: signal red ── */
+.btn-primary {
+  background: var(--signal);
+  color: var(--paper);
+  border-color: var(--signal);
+  padding: 11px 32px;
+  font-weight: 800;
+}
+
+.btn-primary:hover {
+  background: var(--signal-dark);
+  border-color: var(--signal-dark);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.btn-primary:focus-visible {
+  outline: 2px solid var(--signal-dark);
+  outline-offset: 2px;
+}
+
+/* ── Secondary: outlined ink ── */
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.btn-secondary:hover {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 3px 3px 0 var(--grey-400);
+  transform: translate(-1px, -1px);
+}
+
+/* ── Ghost ── */
+.btn-ghost {
+  background: transparent;
+  color: var(--grey-600);
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--grey-300);
+  background: var(--grey-200);
+}
+
+.btn-sm {
+  font-size: 0.62rem;
+  padding: 5px 12px;
+  letter-spacing: 0.1em;
+}
+
+/* ──────────────────────────────────────────
+      STATS BAR
+      Grid strip — stats as typographic counters
+      Red left rule signals active analysis
+   ────────────────────────────────────────── */
+#stats-bar {
+  background: var(--paper);
+  border: var(--rule-thin);
+  border-left: 4px solid var(--grey-300);
+  padding: var(--u-half) var(--sp-2);
+  margin-bottom: var(--sp-1);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  transition: border-color var(--t-mid) ease;
+}
+
+#stats-bar.is-populated {
+  border-left-color: var(--signal);
+}
+
+.stats-empty-state {
+  display: flex;
+  align-items: center;
+  gap: var(--u);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--grey-400);
+}
+
+.stats-empty-icon {
+  font-size: 0.85rem;
+  opacity: 0.3;
+}
+
+.stats-items {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+  width: 100%;
+  animation: fade-up 0.18s ease both;
+}
+
+.stat-chip-label {
+  font-weight: 500;
+  opacity: 0.72;
+  letter-spacing: 0.06em;
+}
+
+.stat-chip-count {
+  font-weight: 700;
+  font-size: 0.88rem;
+  min-width: 14px;
+  text-align: right;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--grey-300);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ──────────────────────────────────────────
+      RESULTS COLUMN
+      Sticky, full viewport height, panel fills all
+   ────────────────────────────────────────── */
+.results-column {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: calc(var(--header-h) + var(--sp-3));
+  height: calc(100vh - var(--header-h) - var(--sp-3) * 2);
+  min-height: 0;
+}
+
+.results-column .panel-header {
+  flex-shrink: 0;
+  margin-bottom: var(--sp-1);
+}
+
+#results-panel {
+  background: var(--paper);
+  border: var(--rule-thin);
+  border-top: var(--rule-red);
+  flex: 1;
+  height: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-color var(--t-mid) ease, box-shadow var(--t-mid) ease;
+}
+
+/* Lift on active */
+#results-panel:focus-within {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+/* ── Idle state ── */
+.results-idle {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+  gap: var(--sp-3);
+}
+
+.idle-graphic {
+  margin-bottom: var(--u);
+}
+
+/* Swiss grid squares instead of rounded dots */
+.idle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 10px);
+  gap: 4px;
+}
+
+.idle-grid span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: var(--grey-300);
+  /* No border-radius — strict Swiss squares */
+  animation: idle-pulse 2.2s ease-in-out infinite;
+}
+
+.idle-grid span:nth-child(5) {
+  background: var(--signal);
+  opacity: 0.6;
+}
+
+.idle-grid span:nth-child(1) {
+  animation-delay: 0s;
+}
+.idle-grid span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.idle-grid span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.idle-grid span:nth-child(4) {
+  animation-delay: 0.36s;
+}
+.idle-grid span:nth-child(5) {
+  animation-delay: 0.48s;
+}
+.idle-grid span:nth-child(6) {
+  animation-delay: 0.36s;
+}
+.idle-grid span:nth-child(7) {
+  animation-delay: 0.24s;
+}
+.idle-grid span:nth-child(8) {
+  animation-delay: 0.12s;
+}
+.idle-grid span:nth-child(9) {
+  animation-delay: 0s;
+}
+
+@keyframes idle-pulse {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.idle-headline {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  border-bottom: 2px solid var(--signal);
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+.idle-subtext {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--grey-600);
+  max-width: 300px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+.idle-subtext kbd {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  background: var(--grey-200);
+  border: 1px solid var(--grey-300);
+  border-bottom: 2px solid var(--grey-400);
+  padding: 1px 6px;
+  color: var(--ink);
+}
+
+/* ── Loading state ── */
+.results-loading {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.loading-bar {
+  width: 200px;
+  height: 2px;
+  background: var(--grey-300);
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: var(--signal);
+  animation: loading-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes loading-sweep {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  50% {
+    width: 60%;
+    margin-left: 20%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
+.loading-label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grey-500);
+}
+
+/* ──────────────────────────────────────────
+      RESULTS OUTPUT
+      Monospace editorial text with generous leading
+   ────────────────────────────────────────── */
+.results-output {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.9;
+  color: var(--ink);
+  overflow-y: auto;
+  word-break: break-word;
+  animation: fade-up 0.18s ease both;
+  /* Thin baseline grid — Swiss precision */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(1.9em - 1px),
+    var(--grey-200) calc(1.9em - 1px),
+    var(--grey-200) 1.9em
+  );
+  background-attachment: local;
+}
+
+.results-output::-webkit-scrollbar {
+  width: 4px;
+}
+.results-output::-webkit-scrollbar-track {
+  background: var(--grey-100);
+}
+.results-output::-webkit-scrollbar-thumb {
+  background: var(--grey-300);
+}
+
+.no-violations {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u);
+  background: transparent;
+  border-left: 4px solid #1a7a3c;
+  color: #1a7a3c;
+  padding: var(--u-half) var(--sp-1);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: var(--sp-2);
+}
+
+/* ──────────────────────────────────────────
+      VIOLATION SPANS
+      Swiss editorial: flat colour wash + hard border-bottom
+      The underline IS the mark — inspired by editorial proofreading
+      passive  → orange (caution)
+      weak     → teal   (note)
+      long     → red    (error — matches brand)
+      banned   → blue   (info)
+   ────────────────────────────────────────── */
+
+/* Shared anatomy */
+.violation-passive,
+.violation-weak,
+.violation-long,
+.violation-banned,
+mark[data-type="passive"],
+mark[data-type="weak"],
+mark[data-type="long"],
+mark[data-type="abbr"],
+mark[data-type="term"] {
+  padding: 1px 3px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: help;
+  display: inline;
+  line-height: inherit;
+  /* No wavy underline — Swiss uses a clean straight rule */
+  text-decoration: none;
+  transition: filter var(--t-fast) ease, box-shadow var(--t-mid) ease,
+    transform var(--t-fast) var(--ease);
+}
+
+.violation-passive:hover,
+.violation-weak:hover,
+.violation-long:hover,
+.violation-banned:hover,
+mark[data-type]:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95) saturate(1.2);
+}
+
+/* ── .violation-passive — orange wash, orange rule ── */
+.violation-passive,
+mark[data-type="passive"] {
+  background: var(--v-passive-bg);
+  border-bottom-color: var(--v-passive-line);
+  color: var(--v-passive-tx);
+}
+.violation-passive:hover,
+mark[data-type="passive"]:hover {
+  box-shadow: 0 2px 0 var(--v-passive-line);
+}
+
+/* ── .violation-weak — teal wash, teal rule ── */
+.violation-weak,
+mark[data-type="weak"] {
+  background: var(--v-weak-bg);
+  border-bottom-color: var(--v-weak-line);
+  color: var(--v-weak-tx);
+}
+.violation-weak:hover,
+mark[data-type="weak"]:hover {
+  box-shadow: 0 2px 0 var(--v-weak-line);
+}
+
+/* ── .violation-long — red wash, red rule (brand) ── */
+.violation-long,
+mark[data-type="long"] {
+  background: var(--v-long-bg);
+  border-bottom-color: var(--v-long-line);
+  color: var(--v-long-tx);
+}
+.violation-long:hover,
+mark[data-type="long"]:hover {
+  box-shadow: 0 2px 0 var(--v-long-line);
+}
+
+/* ── .violation-banned — blue wash, blue rule ── */
+.violation-banned,
+mark[data-type="abbr"],
+mark[data-type="term"] {
+  background: var(--v-banned-bg);
+  border-bottom-color: var(--v-banned-line);
+  color: var(--v-banned-tx);
+}
+.violation-banned:hover,
+mark[data-type="abbr"]:hover,
+mark[data-type="term"]:hover {
+  box-shadow: 0 2px 0 var(--v-banned-line);
+}
+
+/* ──────────────────────────────────────────
+      RESULTS LEGEND
+      Typographic key — flush bottom, ruled separator
+   ────────────────────────────────────────── */
+.results-legend {
+  padding: var(--u-half) var(--sp-2);
+  border-top: var(--rule-thin);
+  background: var(--grey-100);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--grey-500);
+  flex-shrink: 0;
+}
+
+.legend-list {
+  list-style: none;
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+}
+
+/* Swatch: coloured left-border rule instead of a square dot */
+.legend-swatch {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.legend-swatch--passive {
+  background: var(--v-passive-line);
+}
+.legend-swatch--weak {
+  background: var(--v-weak-line);
+}
+.legend-swatch--long {
+  background: var(--v-long-line);
+}
+.legend-swatch--banned {
+  background: var(--v-banned-line);
+}
+
+/* ──────────────────────────────────────────
+      FOOTER
+      Mirror of the header: ink bar + red top stripe
+   ────────────────────────────────────────── */
+.site-footer {
+  background: var(--ink);
+  border-top: 4px solid var(--signal);
+  padding: var(--sp-1) var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: auto;
+}
+
+.site-footer p {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey-600);
+}
+
+/* ──────────────────────────────────────────
+      Utility keyframes
+   ────────────────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ──────────────────────────────────────────
+      RESPONSIVE
+   ────────────────────────────────────────── */
+
+/* Tablet landscape — tighten grid */
+@media (max-width: 1100px) {
+  .app-layout {
+    grid-template-columns: 360px 1fr;
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-2);
+  }
+  .header-inner {
+    padding: 0 var(--sp-3);
+  }
+}
+
+/* Tablet portrait — single column */
+@media (max-width: 860px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+    padding: var(--sp-2);
+    gap: var(--sp-2);
+    min-height: auto;
+    align-items: start;
+  }
+  .results-column {
+    position: static;
+    height: auto;
+    min-height: 0;
+  }
+  .results-column .panel-header {
+    margin-bottom: var(--sp-1);
+  }
+  #results-panel {
+    height: auto;
+    min-height: 520px;
+  }
+  .results-idle,
+  .results-loading {
+    min-height: 400px;
+  }
+  .results-output {
+    min-height: 400px;
+    flex: none;
+    background-image: none;
+  }
+  .doc-textarea {
+    min-height: 280px;
+  }
+  .header-inner {
+    padding: 0 var(--sp-2);
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  :root {
+    --header-h: 56px;
+  }
+  html {
+    font-size: 14px;
+  }
+
+  .header-inner {
+    padding: 0 var(--sp-1);
+  }
+  .tagline {
+    display: none;
+  }
+  .app-layout {
+    padding: var(--sp-1);
+    gap: var(--sp-1);
+  }
+  .action-bar {
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+  }
+  .btn-secondary {
+    flex: 0 0 auto;
+  }
+  #stats-bar {
+    padding: var(--u-half) var(--sp-1);
+  }
+  .stats-items {
+    gap: var(--u-half);
+  }
+  .badge {
+    font-size: 0.58rem;
+    padding: 2px 6px;
+  }
+  .results-output {
+    font-size: 0.82rem;
+    padding: var(--sp-1);
+    background-image: none;
+  }
+  .results-legend {
+    gap: var(--sp-1);
+    padding: var(--u-half) var(--sp-1);
+  }
+  .legend-list {
+    gap: var(--sp-1);
+  }
+  .site-footer {
+    padding: var(--u-half) var(--sp-1);
+    flex-direction: column;
+    gap: var(--u-half);
+  }
+}
+
+/* Narrow mobile */
+@media (max-width: 380px) {
+  .brand-mark {
+    display: none;
+  }
+  .brand-text {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
+  .app-name {
+    font-size: 1rem;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

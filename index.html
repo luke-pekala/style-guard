@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StyleGuard — Documentation Style Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- ░░ HEADER ░░ -->
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span class="brand-mark-inner">SG</span>
+          </div>
+          <div class="brand-text">
+            <h1 class="app-name">StyleGuard</h1>
+            <p class="tagline">Catch inconsistencies. Ship cleaner docs.</p>
+          </div>
+        </div>
+        <nav class="header-meta" aria-label="App controls">
+          <span class="badge">v2.1</span>
+        </nav>
+      </div>
+      <div class="header-rule" aria-hidden="true"></div>
+    </header>
+
+    <!-- ░░ MAIN LAYOUT ░░ -->
+    <main class="app-layout" role="main">
+      <!-- ── LEFT COLUMN: Input ── -->
+      <section class="input-column" aria-labelledby="input-heading">
+        <div class="panel-header">
+          <h2 id="input-heading" class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">01</span>
+            Paste your documentation
+          </h2>
+          <span class="char-counter" id="char-counter" aria-live="polite"
+            >0 chars</span
+          >
+        </div>
+
+        <div class="textarea-wrapper">
+          <textarea
+            id="doc-input"
+            name="doc-input"
+            class="doc-textarea"
+            placeholder="Paste your documentation here…&#10;&#10;StyleGuard will check for passive voice, inconsistent terminology, weak verbs, unclear abbreviations, sentence length, and more."
+            aria-label="Documentation input"
+            aria-describedby="textarea-hint"
+            spellcheck="true"
+            autocorrect="off"
+            autocapitalize="off"
+          ></textarea>
+          <div class="textarea-corner" aria-hidden="true"></div>
+        </div>
+
+        <p id="textarea-hint" class="visually-hidden">
+          Paste plain text documentation. Supports up to 50,000 characters.
+        </p>
+
+        <!-- Action buttons -->
+        <div class="action-bar" role="group" aria-label="Document actions">
+          <button
+            id="analyze-btn"
+            type="button"
+            class="btn btn-primary"
+            aria-describedby="analyze-hint"
+          >
+            <span class="btn-icon" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="7"
+                  cy="7"
+                  r="5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M11 11L14 14"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M5 7H9M7 5V9"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            Analyze
+          </button>
+          <button
+            id="clear-btn"
+            type="button"
+            class="btn btn-secondary"
+            aria-label="Clear document input and results"
+          >
+            <span class="btn-icon" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3 3L13 13M13 3L3 13"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            Clear
+          </button>
+          <p id="analyze-hint" class="visually-hidden">
+            Analyzes the pasted documentation for style violations and
+            highlights issues.
+          </p>
+        </div>
+      </section>
+
+      <!-- ── RIGHT COLUMN: Results ── -->
+      <section class="results-column" aria-labelledby="results-heading">
+        <div class="panel-header">
+          <h2 id="results-heading" class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">02</span>
+            Analysis results
+          </h2>
+          <button
+            class="btn btn-ghost btn-sm"
+            id="copy-results-btn"
+            aria-label="Copy results to clipboard"
+            disabled
+          >
+            Copy report
+          </button>
+        </div>
+
+        <!-- Stats bar -->
+        <div
+          id="stats-bar"
+          class="stats-bar"
+          role="status"
+          aria-live="polite"
+          aria-label="Violation statistics"
+          aria-atomic="true"
+        >
+          <div class="stats-empty-state" aria-hidden="false">
+            <span class="stats-empty-icon">◈</span>
+            <span>Run an analysis to see violation counts</span>
+          </div>
+
+          <!-- Populated dynamically by app.js -->
+          <div class="stats-items" aria-hidden="true" hidden>
+            <div
+              class="stat-chip stat-chip--critical"
+              data-category="passive-voice"
+            >
+              <span class="stat-chip-label">Passive voice</span>
+              <span class="stat-chip-count" id="stat-passive">0</span>
+            </div>
+            <div
+              class="stat-chip stat-chip--warning"
+              data-category="weak-verbs"
+            >
+              <span class="stat-chip-label">Weak verbs</span>
+              <span class="stat-chip-count" id="stat-weak">0</span>
+            </div>
+            <div
+              class="stat-chip stat-chip--warning"
+              data-category="long-sentences"
+            >
+              <span class="stat-chip-label">Long sentences</span>
+              <span class="stat-chip-count" id="stat-long">0</span>
+            </div>
+            <div
+              class="stat-chip stat-chip--info"
+              data-category="abbreviations"
+            >
+              <span class="stat-chip-label">Undefined abbrevs</span>
+              <span class="stat-chip-count" id="stat-abbr">0</span>
+            </div>
+            <div class="stat-chip stat-chip--info" data-category="terminology">
+              <span class="stat-chip-label">Terminology</span>
+              <span class="stat-chip-count" id="stat-terms">0</span>
+            </div>
+            <div class="stat-divider" aria-hidden="true"></div>
+            <div class="stat-chip stat-chip--total">
+              <span class="stat-chip-label">Total</span>
+              <span class="stat-chip-count" id="stat-total">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results panel -->
+        <div
+          id="results-panel"
+          class="results-panel"
+          role="region"
+          aria-labelledby="results-heading"
+          aria-live="polite"
+          aria-relevant="additions removals"
+          tabindex="0"
+        >
+          <!-- Empty / idle state -->
+          <div class="results-idle" id="results-idle">
+            <div class="idle-graphic" aria-hidden="true">
+              <div class="idle-grid">
+                <span></span><span></span><span></span> <span></span
+                ><span></span><span></span> <span></span><span></span
+                ><span></span>
+              </div>
+            </div>
+            <p class="idle-headline">Ready to analyze</p>
+            <p class="idle-subtext">
+              Paste your docs and hit <kbd>Analyze</kbd> — violations will be
+              highlighted inline with explanations.
+            </p>
+          </div>
+
+          <!-- Loading state (hidden until triggered) -->
+          <div
+            class="results-loading"
+            id="results-loading"
+            hidden
+            aria-label="Analyzing document…"
+          >
+            <div class="loading-bar" aria-hidden="true">
+              <div class="loading-bar-fill"></div>
+            </div>
+            <p class="loading-label">Checking style rules…</p>
+          </div>
+
+          <!-- Highlighted output (hidden until populated) -->
+          <article
+            class="results-output"
+            id="results-output"
+            hidden
+            aria-label="Highlighted documentation with style violations marked"
+          >
+            <!-- app.js injects highlighted HTML here -->
+          </article>
+
+          <!-- Legend -->
+          <footer
+            class="results-legend"
+            id="results-legend"
+            hidden
+            aria-label="Highlight legend"
+          >
+            <p class="legend-label">Highlights key</p>
+            <ul class="legend-list" role="list">
+              <li>
+                <span
+                  class="legend-swatch legend-swatch--critical"
+                  aria-hidden="true"
+                ></span
+                >Passive voice
+              </li>
+              <li>
+                <span
+                  class="legend-swatch legend-swatch--warning"
+                  aria-hidden="true"
+                ></span
+                >Weak verb / long sentence
+              </li>
+              <li>
+                <span
+                  class="legend-swatch legend-swatch--info"
+                  aria-hidden="true"
+                ></span
+                >Abbreviation / terminology
+              </li>
+            </ul>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <!-- ░░ FOOTER ░░ -->
+    <footer class="site-footer" role="contentinfo">
+      <p>
+        StyleGuard — Documentation style enforcement &nbsp;·&nbsp; All analysis
+        runs locally in your browser.
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
