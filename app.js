@@ -1,475 +1,714 @@
 /**
- * StyleGuard — app.js
- * Documentation style checker
- * All analysis runs client-side; no data leaves the browser.
+ * STYLE GUARD — app.js
+ * Wires up: analyze-btn, clear-btn, doc-input, stats-bar, results-panel
  */
 
-"use strict";
-
-/* ─────────────────────────────────────────
-   Style Rules
-───────────────────────────────────────── */
-const STYLE_RULES = {
+/* ═══════════════════════════════════════════
+   RULE DEFINITIONS
+═══════════════════════════════════════════ */
+const RULES = {
   passive: {
-    type: "passive",
-    label: "Passive voice",
-    // Matches "be/been/being/is/are/was/were/will be + past participle"
-    pattern:
-      /\b(is|are|was|were|be|been|being|will\s+be|has\s+been|have\s+been|had\s+been)\s+(\w+ed|built|done|found|given|gone|known|made|put|seen|set|shown|taken|told|used|written)\b/gi,
-    tip: "Consider rewriting in active voice for clarity.",
+    label: "Passive Voice",
+    patterns: [
+      /\b(is|are|was|were|be|been|being)\s+([\w]+ed)\b/gi,
+      /\b(is|are|was|were)\s+being\s+([\w]+ed)\b/gi,
+      /\b(has|have|had)\s+been\s+([\w]+ed)\b/gi,
+    ],
   },
-  weak: {
-    type: "weak",
-    label: "Weak verb",
-    pattern:
-      /\b(utilize|utilizes|utilized|leverage|leverages|leveraged|facilitate|facilitates|facilitated|endeavour|endeavor|commence|commences|commenced|implement|implements|implemented|perform|performs|performed|conduct|conducts|conducted|achieve|achieves|achieved|enable|enables|enabled)\b/gi,
-    tip: "Replace with a simpler, more direct verb.",
+  complex: {
+    label: "High Complexity",
+    // Sentences with >30 words are flagged as high complexity
+    sentenceWordThreshold: 30,
   },
-  abbr: {
-    type: "abbr",
-    label: "Undefined abbreviation",
-    // Capital letter sequences 2–5 chars that are not common words
-    pattern: /\b([A-Z]{2,5})\b/g,
-    tip: 'Define this abbreviation on first use, e.g. "API (Application Programming Interface)".',
-    filter: (match) => {
-      const common = new Set([
-        "I",
-        "OK",
-        "US",
-        "EU",
-        "UK",
-        "UN",
-        "HTML",
-        "CSS",
-        "JSON",
-        "XML",
-        "URL",
-        "SQL",
-        "API",
-        "SDK",
-        "CLI",
-        "HTTP",
-        "HTTPS",
-        "REST",
-        "AI",
-        "ML",
-        "ID",
-        "PDF",
-        "UI",
-        "UX",
-      ]);
-      return !common.has(match[1]);
-    },
-  },
-  term: {
-    type: "term",
-    label: "Inconsistent terminology",
-    // Check for mixed use of synonymous pairs
+  jargon: {
+    label: "Jargon",
     terms: [
-      ["login", "log in", "log-in"],
-      ["setup", "set up", "set-up"],
-      ["email", "e-mail"],
-      ["dropdown", "drop-down", "drop down"],
-      ["username", "user name", "user-name"],
-      ["filename", "file name", "file-name"],
-      ["backend", "back-end", "back end"],
-      ["frontend", "front-end", "front end"],
+      "utilize",
+      "utilization",
+      "leverage",
+      "synergy",
+      "synergize",
+      "paradigm shift",
+      "boil the ocean",
+      "circle back",
+      "move the needle",
+      "deep dive",
+      "low-hanging fruit",
+      "bandwidth",
+      "scalable",
+      "impactful",
+      "actionable",
+      "deliverable",
+      "granular",
+      "robust solution",
+      "in order to",
+      "touch base",
+      "take offline",
+      "end of day",
+      "going forward",
+    ],
+  },
+  casing: {
+    label: "Casing",
+    // Looks for all-caps words that aren't acronyms, and inconsistent title casing
+    patterns: [
+      /\b([A-Z]{4,})\b/g, // Long all-caps words (non-acronym)
+      /\b(I[a-z])\b/g, // "Iwant", "Ican" etc — missing space
     ],
   },
 };
 
-const LONG_SENTENCE_WORDS = 30;
-
-/* ─────────────────────────────────────────
-   DOM References
-───────────────────────────────────────── */
+/* ═══════════════════════════════════════════
+   ELEMENT REFS
+═══════════════════════════════════════════ */
 const docInput = document.getElementById("doc-input");
 const analyzeBtn = document.getElementById("analyze-btn");
 const clearBtn = document.getElementById("clear-btn");
 const statsBar = document.getElementById("stats-bar");
 const resultsPanel = document.getElementById("results-panel");
-const charCounter = document.getElementById("char-counter");
-const copyResultsBtn = document.getElementById("copy-results-btn");
-
-// Stats chips
-const statPassive = document.getElementById("stat-passive");
-const statWeak = document.getElementById("stat-weak");
-const statLong = document.getElementById("stat-long");
-const statAbbr = document.getElementById("stat-abbr");
-const statTerms = document.getElementById("stat-terms");
-const statTotal = document.getElementById("stat-total");
-
-// Stats bar states
-const statsEmpty = statsBar.querySelector(".stats-empty-state");
-const statsItems = statsBar.querySelector(".stats-items");
-
-// Results panel states
-const resultsIdle = document.getElementById("results-idle");
-const resultsLoading = document.getElementById("results-loading");
 const resultsOutput = document.getElementById("results-output");
-const resultsLegend = document.getElementById("results-legend");
 
-/* ─────────────────────────────────────────
-   State
-───────────────────────────────────────── */
-let lastAnalysisText = "";
+const statTotal = document.getElementById("stat-total");
+const statPassive = document.getElementById("stat-passive");
+const statComplex = document.getElementById("stat-complex");
+const statJargon = document.getElementById("stat-jargon");
+const statCasing = document.getElementById("stat-casing");
+const statScore = document.getElementById("stat-score");
+const scoreBarFill = document.getElementById("score-bar-fill");
+const charCountEl = document.querySelector(".char-count");
+const downloadBtn = document.getElementById("download-btn");
 
-/* ─────────────────────────────────────────
-   Character counter
-───────────────────────────────────────── */
+/* ═══════════════════════════════════════════
+   CHAR COUNT
+═══════════════════════════════════════════ */
 docInput.addEventListener("input", () => {
   const len = docInput.value.length;
-  charCounter.textContent =
-    len.toLocaleString() + " char" + (len === 1 ? "" : "s");
+  charCountEl.textContent = `${len.toLocaleString()} character${
+    len !== 1 ? "s" : ""
+  }`;
 });
 
-/* ─────────────────────────────────────────
-   Analyze
-───────────────────────────────────────── */
-analyzeBtn.addEventListener("click", runAnalysis);
+/* ═══════════════════════════════════════════
+   KEYBOARD SHORTCUT  ⌘+Enter / Ctrl+Enter
+═══════════════════════════════════════════ */
 docInput.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runAnalysis();
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+    e.preventDefault();
+    runAnalysis();
+  }
 });
 
-function runAnalysis() {
-  const text = docInput.value.trim();
-  if (!text) {
-    flashTextarea();
-    return;
-  }
+/* ═══════════════════════════════════════════
+   DOWNLOAD BUTTON
+═══════════════════════════════════════════ */
+downloadBtn.addEventListener("click", downloadReport);
 
-  lastAnalysisText = text;
+/* ═══════════════════════════════════════════
+   ANALYZE BUTTON
+═══════════════════════════════════════════ */
+analyzeBtn.addEventListener("click", runAnalysis);
 
-  // Show loading
-  showState("loading");
-
-  // Simulate brief async work for UX feedback (all work is sync)
-  setTimeout(() => {
-    const result = analyze(text);
-    renderStats(result.counts);
-    renderOutput(result.html);
-    showState("results");
-    copyResultsBtn.disabled = false;
-  }, 320);
-}
-
-/* ─────────────────────────────────────────
-   Clear
-───────────────────────────────────────── */
+/* ═══════════════════════════════════════════
+   CLEAR BUTTON
+═══════════════════════════════════════════ */
 clearBtn.addEventListener("click", () => {
   docInput.value = "";
-  charCounter.textContent = "0 chars";
-  lastAnalysisText = "";
-  copyResultsBtn.disabled = true;
-  showState("idle");
+  charCountEl.textContent = "0 characters";
+  resultsOutput.innerHTML = "";
   resetStats();
+  downloadBtn.disabled = true;
+  downloadBtn.classList.remove("downloaded");
   docInput.focus();
 });
 
-/* ─────────────────────────────────────────
-   Copy results
-───────────────────────────────────────── */
-copyResultsBtn.addEventListener("click", async () => {
-  const plain = resultsOutput.textContent || "";
-  try {
-    await navigator.clipboard.writeText(plain);
-    copyResultsBtn.textContent = "Copied!";
-    setTimeout(() => {
-      copyResultsBtn.textContent = "Copy report";
-    }, 1800);
-  } catch {
-    copyResultsBtn.textContent = "Failed";
-    setTimeout(() => {
-      copyResultsBtn.textContent = "Copy report";
-    }, 1800);
-  }
-});
-
-/* ─────────────────────────────────────────
-   Core Analyzer
-───────────────────────────────────────── */
-function analyze(text) {
-  const counts = { passive: 0, weak: 0, long: 0, abbr: 0, terms: 0 };
-
-  // ── Detect inconsistent terminology ──
-  // Find which terms from each synonym group appear in the text
-  const termMatches = new Map(); // group index → Set of variants found
-  STYLE_RULES.term.terms.forEach((group, i) => {
-    const found = new Set();
-    group.forEach((variant) => {
-      const re = new RegExp(`\\b${escapeRegex(variant)}\\b`, "gi");
-      if (re.test(text)) found.add(variant);
-    });
-    if (found.size > 1) {
-      termMatches.set(i, found);
-    }
-  });
-
-  // Build a map of positions to highlight for terminology
-  const termPositions = []; // { start, end, group }
-  termMatches.forEach((variants, groupIdx) => {
-    variants.forEach((variant) => {
-      const re = new RegExp(`\\b${escapeRegex(variant)}\\b`, "gi");
-      let m;
-      while ((m = re.exec(text)) !== null) {
-        termPositions.push({
-          start: m.index,
-          end: m.index + m[0].length,
-          word: m[0],
-          groupIdx,
-        });
-      }
-    });
-    counts.terms += variants.size;
-  });
-
-  // ── Build highlights map (offset → highlight info) ──
-  // We'll collect all ranges with type, then sort and apply
-  const ranges = [];
-
-  // Passive voice
-  {
-    const re = new RegExp(
-      STYLE_RULES.passive.pattern.source,
-      STYLE_RULES.passive.pattern.flags
-    );
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      counts.passive++;
-      ranges.push({
-        start: m.index,
-        end: m.index + m[0].length,
-        type: "passive",
-        tip: STYLE_RULES.passive.tip,
-      });
-    }
-  }
-
-  // Weak verbs
-  {
-    const re = new RegExp(
-      STYLE_RULES.weak.pattern.source,
-      STYLE_RULES.weak.pattern.flags
-    );
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      counts.weak++;
-      ranges.push({
-        start: m.index,
-        end: m.index + m[0].length,
-        type: "weak",
-        tip: STYLE_RULES.weak.tip,
-      });
-    }
-  }
-
-  // Abbreviations
-  {
-    const re = new RegExp(
-      STYLE_RULES.abbr.pattern.source,
-      STYLE_RULES.abbr.pattern.flags
-    );
-    let m;
-    const seen = new Set();
-    while ((m = re.exec(text)) !== null) {
-      if (STYLE_RULES.abbr.filter(m) && !seen.has(m[1].toLowerCase())) {
-        // Only flag first occurrence
-        seen.add(m[1].toLowerCase());
-        counts.abbr++;
-        ranges.push({
-          start: m.index,
-          end: m.index + m[0].length,
-          type: "abbr",
-          tip: STYLE_RULES.abbr.tip,
-        });
-      }
-    }
-  }
-
-  // Terminology
-  termPositions.forEach(({ start, end, word, groupIdx }) => {
-    const group = STYLE_RULES.term.terms[groupIdx];
-    const others = group
-      .filter((v) => v.toLowerCase() !== word.toLowerCase())
-      .join(", ");
-    ranges.push({
-      start,
-      end,
-      type: "term",
-      tip: `Inconsistent with: "${others}". Pick one form and use it throughout.`,
-    });
-  });
-
-  // Long sentences
-  const sentences = splitSentences(text);
-  sentences.forEach(({ value, start }) => {
-    const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount >= LONG_SENTENCE_WORDS) {
-      counts.long++;
-      ranges.push({
-        start,
-        end: start + value.length,
-        type: "long",
-        tip: `This sentence is ${wordCount} words. Consider splitting it at ${LONG_SENTENCE_WORDS}+ words.`,
-      });
-    }
-  });
-
-  // ── Build annotated HTML ──
-  const html = buildHighlightedHTML(text, ranges);
-
-  return { counts, html };
+/* ═══════════════════════════════════════════
+   ACTIVE RULE TOGGLES
+═══════════════════════════════════════════ */
+function getActiveRules() {
+  const checks = document.querySelectorAll(
+    '.rule-toggles input[type="checkbox"]'
+  );
+  return Array.from(checks)
+    .filter((cb) => cb.checked)
+    .map((cb) => cb.value);
 }
 
-/* ─────────────────────────────────────────
-   Build highlighted HTML
-───────────────────────────────────────── */
-function buildHighlightedHTML(text, ranges) {
-  if (!ranges.length) {
-    return `<p class="no-violations">✓ No style violations found. Great work!</p>${escapeHtml(
-      text
-    ).replace(/\n/g, "<br>")}`;
+/* ═══════════════════════════════════════════
+   MAIN ANALYSIS
+═══════════════════════════════════════════ */
+function runAnalysis() {
+  const text = docInput.value.trim();
+  if (!text) {
+    shakeElement(docInput);
+    docInput.focus();
+    return;
   }
 
-  // Sort ranges by start; for overlaps prefer narrower range
-  ranges.sort((a, b) => a.start - b.start || b.end - a.end);
+  // Loading state
+  analyzeBtn.classList.add("loading");
+  analyzeBtn.disabled = true;
 
-  // Remove fully overlapping ranges (keep the first/narrower one)
-  const clean = [];
+  // Small defer to allow repaint
+  setTimeout(() => {
+    try {
+      const activeRules = getActiveRules();
+      const violations = collectViolations(text, activeRules);
+      const highlighted = buildHighlightedHTML(text, violations);
+
+      renderResults(highlighted, violations);
+    } catch (err) {
+      console.error("StyleGuard analysis error:", err);
+    } finally {
+      analyzeBtn.classList.remove("loading");
+      analyzeBtn.disabled = false;
+    }
+  }, 60);
+}
+
+/* ═══════════════════════════════════════════
+   COLLECT VIOLATIONS
+   Returns array of { start, end, type }
+═══════════════════════════════════════════ */
+function collectViolations(text, activeRules) {
+  const violations = [];
+
+  // ── Passive Voice ──
+  if (activeRules.includes("passive")) {
+    for (const pattern of RULES.passive.patterns) {
+      pattern.lastIndex = 0;
+      let m;
+      while ((m = pattern.exec(text)) !== null) {
+        violations.push({
+          start: m.index,
+          end: m.index + m[0].length,
+          type: "passive",
+          match: m[0],
+        });
+      }
+    }
+  }
+
+  // ── Jargon ──
+  if (activeRules.includes("jargon")) {
+    for (const term of RULES.jargon.terms) {
+      const re = new RegExp(`\\b${escapeRegex(term)}\\b`, "gi");
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        violations.push({
+          start: m.index,
+          end: m.index + m[0].length,
+          type: "jargon",
+          match: m[0],
+        });
+      }
+    }
+  }
+
+  // ── Casing ──
+  if (activeRules.includes("casing")) {
+    for (const pattern of RULES.casing.patterns) {
+      pattern.lastIndex = 0;
+      let m;
+      while ((m = pattern.exec(text)) !== null) {
+        // Ignore known common acronyms
+        const knownAcronyms =
+          /^(API|URL|HTML|CSS|JS|JSON|HTTP|HTTPS|ID|SDK|CLI|GUI|FAQ|SQL|XML|PDF|PNG|SVG|RGB|CSS|UI|UX|QA|CI|CD)$/i;
+        if (!knownAcronyms.test(m[0])) {
+          violations.push({
+            start: m.index,
+            end: m.index + m[0].length,
+            type: "casing",
+            match: m[0],
+          });
+        }
+      }
+    }
+  }
+
+  // ── Complexity (sentence-level) ──
+  if (activeRules.includes("complex")) {
+    const sentenceRe = /[^.!?]+[.!?]+/g;
+    let m;
+    while ((m = sentenceRe.exec(text)) !== null) {
+      const wordCount = m[0].trim().split(/\s+/).length;
+      if (wordCount > RULES.complex.sentenceWordThreshold) {
+        violations.push({
+          start: m.index,
+          end: m.index + m[0].length,
+          type: "complex",
+          match: m[0],
+        });
+      }
+    }
+  }
+
+  // De-overlap: remove duplicates & overlapping ranges
+  return deoverlap(violations);
+}
+
+/* ═══════════════════════════════════════════
+   DE-OVERLAP VIOLATIONS
+═══════════════════════════════════════════ */
+function deoverlap(violations) {
+  // Sort by start, then length descending (prefer longer spans)
+  const sorted = [...violations].sort(
+    (a, b) => a.start - b.start || b.end - b.start - (a.end - a.start)
+  );
+  const result = [];
   let cursor = 0;
-  for (const r of ranges) {
-    if (r.start >= cursor) {
-      clean.push(r);
-      cursor = r.end;
+  for (const v of sorted) {
+    if (v.start >= cursor) {
+      result.push(v);
+      cursor = v.end;
     }
+  }
+  return result;
+}
+
+/* ═══════════════════════════════════════════
+   BUILD HIGHLIGHTED HTML
+═══════════════════════════════════════════ */
+function buildHighlightedHTML(text, violations) {
+  let html = "";
+  let cursor = 0;
+
+  for (const v of violations) {
+    // Safe text before this violation
+    if (v.start > cursor) {
+      html += escapeHTML(text.slice(cursor, v.start));
+    }
+    const span = escapeHTML(text.slice(v.start, v.end));
+    const title = RULES[v.type].label;
+    html += `<mark data-type="${v.type}" title="${title}: ${escapeAttr(
+      span
+    )}">${span}</mark>`;
+    cursor = v.end;
   }
 
-  let html = "";
-  let pos = 0;
-  for (const r of clean) {
-    if (r.start > pos) {
-      html += escapeHtml(text.slice(pos, r.start)).replace(/\n/g, "<br>");
-    }
-    const word = escapeHtml(text.slice(r.start, r.end));
-    const tip = escapeAttr(r.tip);
-    html += `<mark data-type="${
-      r.type
-    }" title="${tip}" aria-label="${escapeAttr(
-      r.type
-    )} issue: ${tip}">${word}</mark>`;
-    pos = r.end;
-  }
-  if (pos < text.length) {
-    html += escapeHtml(text.slice(pos)).replace(/\n/g, "<br>");
+  // Remaining text
+  if (cursor < text.length) {
+    html += escapeHTML(text.slice(cursor));
   }
 
   return html;
 }
 
-/* ─────────────────────────────────────────
-   Split text into sentences with offsets
-───────────────────────────────────────── */
-function splitSentences(text) {
-  const results = [];
-  // Split on sentence-ending punctuation followed by whitespace or EOL
-  const re = /[^.!?]*[.!?]+[\s]*/g;
-  let m;
-  let lastEnd = 0;
-  while ((m = re.exec(text)) !== null) {
-    results.push({ value: m[0], start: m.index });
-    lastEnd = m.index + m[0].length;
-  }
-  // Capture any remaining text without trailing punctuation
-  if (lastEnd < text.length) {
-    results.push({ value: text.slice(lastEnd), start: lastEnd });
-  }
-  return results;
-}
+/* ═══════════════════════════════════════════
+   RENDER RESULTS INTO DOM
+═══════════════════════════════════════════ */
+function renderResults(html, violations) {
+  // Counts per type
+  const counts = { passive: 0, complex: 0, jargon: 0, casing: 0 };
+  for (const v of violations) counts[v.type]++;
+  const total = violations.length;
 
-/* ─────────────────────────────────────────
-   Render Stats
-───────────────────────────────────────── */
-function renderStats(counts) {
-  statPassive.textContent = counts.passive;
-  statWeak.textContent = counts.weak;
-  statLong.textContent = counts.long;
-  statAbbr.textContent = counts.abbr;
-  statTerms.textContent = counts.terms;
-  const total =
-    counts.passive + counts.weak + counts.long + counts.abbr + counts.terms;
+  // Score: 100 minus 5 per violation, floor 0
+  const score = Math.max(0, Math.min(100, 100 - total * 5));
+
+  // Reveal stats bar FIRST — elements are display:none until state=loaded
+  statsBar.dataset.state = "loaded";
+
+  // Now write values (elements are visible)
   statTotal.textContent = total;
+  statPassive.textContent = counts.passive;
+  statComplex.textContent = counts.complex;
+  statJargon.textContent = counts.jargon;
+  statCasing.textContent = counts.casing;
+  statScore.textContent = score;
 
-  statsEmpty.setAttribute("aria-hidden", "true");
-  statsEmpty.hidden = true;
-  statsItems.setAttribute("aria-hidden", "false");
-  statsItems.hidden = false;
-}
+  // Trigger score bar fill in next frame so CSS transition fires
+  requestAnimationFrame(() => {
+    scoreBarFill.style.width = `${score}%`;
+  });
 
-function resetStats() {
-  statsEmpty.removeAttribute("aria-hidden");
-  statsEmpty.hidden = false;
-  statsItems.setAttribute("aria-hidden", "true");
-  statsItems.hidden = true;
-}
+  // Score color
+  statScore.style.color =
+    score >= 80
+      ? "var(--clr-casing)"
+      : score >= 50
+      ? "var(--accent)"
+      : "var(--clr-complex)";
 
-/* ─────────────────────────────────────────
-   Render Output
-───────────────────────────────────────── */
-function renderOutput(html) {
+  // Enable download button
+  downloadBtn.disabled = false;
+  downloadBtn.classList.remove("downloaded");
+
+  // Update results panel
   resultsOutput.innerHTML = html;
-}
+  resultsOutput.style.animation = "none";
+  void resultsOutput.offsetWidth; // force reflow
+  resultsOutput.style.animation = "";
 
-/* ─────────────────────────────────────────
-   UI State Machine
-───────────────────────────────────────── */
-function showState(state) {
-  // All hidden first
-  resultsIdle.hidden = true;
-  resultsLoading.hidden = true;
-  resultsOutput.hidden = true;
-  resultsLegend.hidden = true;
-
-  if (state === "idle") {
-    resultsIdle.hidden = false;
-  } else if (state === "loading") {
-    resultsLoading.hidden = false;
-  } else if (state === "results") {
-    resultsOutput.hidden = false;
-    resultsLegend.hidden = false;
+  // Scroll results into view on mobile
+  if (window.innerWidth < 900) {
+    resultsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  // Announce to screen readers
+  const msg =
+    total === 0
+      ? "Analysis complete. No violations found."
+      : `Analysis complete. ${total} violation${total !== 1 ? "s" : ""} found.`;
+  announceToSR(msg);
 }
 
-/* ─────────────────────────────────────────
-   Textarea flash on empty submit
-───────────────────────────────────────── */
-function flashTextarea() {
-  const wrapper = docInput.closest(".textarea-wrapper");
-  wrapper.style.transition = "none";
-  wrapper.style.borderColor = "var(--critical-text)";
-  wrapper.style.boxShadow = "0 0 0 3px var(--critical-bg)";
-  docInput.focus();
+/* ═══════════════════════════════════════════
+   RESET STATS
+═══════════════════════════════════════════ */
+function resetStats() {
+  statsBar.dataset.state = "empty";
+  [
+    statTotal,
+    statPassive,
+    statComplex,
+    statJargon,
+    statCasing,
+    statScore,
+  ].forEach((el) => {
+    el.textContent = "—";
+  });
+  scoreBarFill.style.width = "0%";
+  statScore.style.color = "";
+}
+
+/* ═══════════════════════════════════════════
+   DOWNLOAD REPORT
+═══════════════════════════════════════════ */
+function downloadReport() {
+  const text = docInput.value.trim();
+  const outputHTML = resultsOutput.innerHTML;
+  if (!outputHTML) return;
+
+  const total = statTotal.textContent;
+  const passive = statPassive.textContent;
+  const complex = statComplex.textContent;
+  const jargon = statJargon.textContent;
+  const casing = statCasing.textContent;
+  const score = statScore.textContent;
+  const date = new Date().toLocaleString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const scoreNum = parseInt(score, 10);
+  const scoreColor =
+    scoreNum >= 80 ? "#52d9b0" : scoreNum >= 50 ? "#f0c040" : "#ff8c5a";
+
+  const reportHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StyleGuard Report — ${date}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0c0e; --surface: #141418; --surface-2: #1c1c22;
+      --border: #2a2a36; --text: #e8e8f0; --text-muted: #7a7a92; --text-dim: #4a4a62;
+      --accent: #f0c040;
+      --clr-passive: #7b9cff; --clr-complex: #ff8c5a; --clr-jargon: #b87bff; --clr-casing: #52d9b0;
+      --clr-passive-bg: rgba(123,156,255,0.12); --clr-complex-bg: rgba(255,140,90,0.12);
+      --clr-jargon-bg: rgba(184,123,255,0.12);  --clr-casing-bg: rgba(82,217,176,0.12);
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif;
+           font-size: 15px; line-height: 1.65; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    /* ── Page shell ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 48px 32px 80px; }
+
+    /* ── Report header ── */
+    .report-header { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 36px; }
+    .report-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .report-shield {
+      width: 44px; height: 44px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: #0c0c0e; flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(240,192,64,0.3);
+    }
+    .report-title { font-family: 'Syne', sans-serif; font-size: 1.75rem; font-weight: 800;
+                    letter-spacing: -0.02em; color: var(--text); }
+    .report-title span { color: var(--accent); }
+    .report-subtitle { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+                       color: var(--text-muted); letter-spacing: 0.02em; margin-top: 3px; }
+    .report-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+    .report-meta-item { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--text-dim); }
+    .report-meta-item strong { color: var(--text-muted); }
+
+    /* ── Score card ── */
+    .score-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px 28px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+    }
+    .score-main { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
+    .score-num { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800;
+                 line-height: 1; color: ${scoreColor}; }
+    .score-lbl { font-family: 'IBM Plex Mono', monospace; font-size: 0.6875rem;
+                 text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-top: 4px; }
+    .score-bar-wrap { flex: 1; min-width: 140px; }
+    .score-bar-track { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .score-bar-fill { height: 100%; border-radius: 3px; background: ${scoreColor};
+                      width: ${Math.max(0, Math.min(100, scoreNum))}%;
+                      box-shadow: 0 0 8px ${scoreColor}; }
+    .stats-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .stat-pill {
+      display: flex; flex-direction: column; padding: 10px 16px;
+      background: var(--surface-2); border-radius: 8px; min-width: 90px;
+    }
+    .stat-pill__label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+                        text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim);
+                        display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .stat-pill__dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+    .stat-pill__value { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 700;
+                        margin-top: 2px; color: var(--text); }
+    .dot-passive { background: var(--clr-passive); }
+    .dot-complex { background: var(--clr-complex); }
+    .dot-jargon  { background: var(--clr-jargon); }
+    .dot-casing  { background: var(--clr-casing); }
+
+    /* ── Section headings ── */
+    .section-heading {
+      font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim);
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-heading::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── Annotated doc ── */
+    .annotated-doc {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 28px 32px; font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem;
+      line-height: 1.9; color: var(--text); white-space: pre-wrap; word-break: break-word;
+      margin-bottom: 32px;
+    }
+    mark { border-radius: 3px; padding: 1px 3px; font-style: normal; border-bottom: 2px solid transparent; }
+    mark[data-type="passive"] { background: var(--clr-passive-bg); border-bottom-color: var(--clr-passive); color: #adc2ff; }
+    mark[data-type="complex"] { background: var(--clr-complex-bg); border-bottom-color: var(--clr-complex); color: #ffb08a; }
+    mark[data-type="jargon"]  { background: var(--clr-jargon-bg);  border-bottom-color: var(--clr-jargon);  color: #d0aaff; }
+    mark[data-type="casing"]  { background: var(--clr-casing-bg);  border-bottom-color: var(--clr-casing);  color: #80e8c8; }
+
+    /* ── Violation list ── */
+    .violation-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+    .violation-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;
+    }
+    .vi-badge {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+      margin-top: 2px; flex-shrink: 0;
+    }
+    .vi-badge--passive { background: var(--clr-passive-bg); color: var(--clr-passive); }
+    .vi-badge--complex { background: var(--clr-complex-bg); color: var(--clr-complex); }
+    .vi-badge--jargon  { background: var(--clr-jargon-bg);  color: var(--clr-jargon);  }
+    .vi-badge--casing  { background: var(--clr-casing-bg);  color: var(--clr-casing);  }
+    .vi-text { font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; color: var(--text-muted); }
+    .vi-text strong { color: var(--text); }
+
+    /* ── Legend ── */
+    .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+              padding: 16px 0; border-top: 1px solid var(--border); }
+    .legend-title { font-family: 'IBM Plex Mono', monospace; font-size: 0.6875rem;
+                    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+    .legend-list { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem;
+                   color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
+    .legend-swatch { display: inline-block; width: 20px; height: 6px; border-radius: 3px; }
+
+    /* ── Footer ── */
+    .report-footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border);
+                     font-family: 'IBM Plex Mono', monospace; font-size: 0.6875rem; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="report-header">
+    <div class="report-brand">
+      <div class="report-shield">
+        <svg width="22" height="26" viewBox="0 0 28 32" fill="none">
+          <path d="M14 0L28 5.6V16C28 24.32 22.008 31.36 14 32C5.992 31.36 0 24.32 0 16V5.6L14 0Z" fill="currentColor"/>
+          <path d="M8 16l4 4 8-8" stroke="#0c0c0e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="report-title">Style<span>Guard</span> Report</div>
+        <div class="report-subtitle">Documentation Style Analysis</div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <span class="report-meta-item"><strong>Generated:</strong> ${date}</span>
+      <span class="report-meta-item"><strong>Characters:</strong> ${text.length.toLocaleString()}</span>
+      <span class="report-meta-item"><strong>Words:</strong> ${text
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .length.toLocaleString()}</span>
+    </div>
+  </header>
+
+  <!-- Score card -->
+  <div class="score-card">
+    <div class="score-main">
+      <div class="score-num">${score}</div>
+      <div class="score-lbl">Style Score</div>
+      <div class="score-bar-wrap" style="width:80px;margin-top:8px;">
+        <div class="score-bar-track"><div class="score-bar-fill"></div></div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-pill">
+        <span class="stat-pill__label">Total</span>
+        <span class="stat-pill__value">${total}</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill__label"><span class="stat-pill__dot dot-passive"></span>Passive</span>
+        <span class="stat-pill__value">${passive}</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill__label"><span class="stat-pill__dot dot-complex"></span>Complex</span>
+        <span class="stat-pill__value">${complex}</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill__label"><span class="stat-pill__dot dot-jargon"></span>Jargon</span>
+        <span class="stat-pill__value">${jargon}</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill__label"><span class="stat-pill__dot dot-casing"></span>Casing</span>
+        <span class="stat-pill__value">${casing}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotated document -->
+  <div class="section-heading">Annotated Document</div>
+  <div class="annotated-doc">${outputHTML}</div>
+
+  <!-- Violation list -->
+  <div class="section-heading">Violations Breakdown</div>
+  <ul class="violation-list">
+    ${buildViolationListHTML()}
+  </ul>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span class="legend-title">Legend</span>
+    <ul class="legend-list">
+      <li class="legend-item"><span class="legend-swatch" style="background:var(--clr-passive)"></span>Passive voice</li>
+      <li class="legend-item"><span class="legend-swatch" style="background:var(--clr-complex)"></span>High complexity</li>
+      <li class="legend-item"><span class="legend-swatch" style="background:var(--clr-jargon)"></span>Jargon</li>
+      <li class="legend-item"><span class="legend-swatch" style="background:var(--clr-casing)"></span>Casing issue</li>
+    </ul>
+  </div>
+
+  <footer class="report-footer">
+    StyleGuard &copy; 2026 &nbsp;·&nbsp; Generated automatically &nbsp;·&nbsp; Review all suggestions before applying
+  </footer>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([reportHTML], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const filename = `styleguard-report-${new Date()
+    .toISOString()
+    .slice(0, 10)}.html`;
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Brief "downloaded" feedback
+  const origLabel = downloadBtn.querySelector(".btn__label").textContent;
+  downloadBtn.querySelector(".btn__label").textContent = "Downloaded!";
+  downloadBtn.classList.add("downloaded");
   setTimeout(() => {
-    wrapper.style.transition = "";
-    wrapper.style.borderColor = "";
-    wrapper.style.boxShadow = "";
-  }, 600);
+    downloadBtn.querySelector(".btn__label").textContent = origLabel;
+    downloadBtn.classList.remove("downloaded");
+  }, 2200);
 }
 
-/* ─────────────────────────────────────────
-   Utilities
-───────────────────────────────────────── */
-function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/* ═══════════════════════════════════════════
+   BUILD VIOLATION LIST HTML (for report)
+═══════════════════════════════════════════ */
+function buildViolationListHTML() {
+  const marks = resultsOutput.querySelectorAll("mark[data-type]");
+  if (!marks.length) {
+    return "<li style=\"color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:0.8125rem;padding:8px 0;\">No violations detected — document looks clean!</li>";
+  }
+  const typeLabels = {
+    passive: "Passive Voice",
+    complex: "High Complexity",
+    jargon: "Jargon",
+    casing: "Casing",
+  };
+  return Array.from(marks)
+    .map((m) => {
+      const type = m.dataset.type;
+      const label = typeLabels[type] || type;
+      const text =
+        m.textContent.length > 80
+          ? m.textContent.slice(0, 77) + "…"
+          : m.textContent;
+      return `<li class="violation-item">
+      <span class="vi-badge vi-badge--${type}">${label}</span>
+      <span class="vi-text"><strong>"${escapeHTML(text)}"</strong></span>
+    </li>`;
+    })
+    .join("\n");
+}
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════ */
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function escapeAttr(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return str.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function shakeElement(el) {
+  el.style.animation = "none";
+  el.style.transition = "border-color 80ms";
+  el.style.borderColor = "var(--clr-complex)";
+  el.style.boxShadow = "0 0 0 3px rgba(255,140,90,0.2)";
+  setTimeout(() => {
+    el.style.borderColor = "";
+    el.style.boxShadow = "";
+  }, 600);
+}
+
+function announceToSR(message) {
+  let liveEl = document.getElementById("sr-announce");
+  if (!liveEl) {
+    liveEl = document.createElement("div");
+    liveEl.id = "sr-announce";
+    liveEl.setAttribute("aria-live", "polite");
+    liveEl.setAttribute("aria-atomic", "true");
+    liveEl.className = "sr-only";
+    document.body.appendChild(liveEl);
+  }
+  liveEl.textContent = "";
+  setTimeout(() => {
+    liveEl.textContent = message;
+  }, 100);
 }
