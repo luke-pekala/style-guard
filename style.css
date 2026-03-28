@@ -1,26 +1,42 @@
 /* ═══════════════════════════════════════════════════════════════
    STYLEGUARD — style.css
-   Theme: shadcn/ui dark (neutral)
-   Layout: sticky header · two-column panes · legend footer
+   Theme: shadcn/ui — dark + light via [data-theme] attribute
+   Toggle: sun/moon button in header, persisted to localStorage
 ═══════════════════════════════════════════════════════════════ */
 
-/* ── 1. DESIGN TOKENS ─────────────────────────────────────── */
+/* ── 1. SHARED TOKENS (theme-independent) ─────────────────── */
 :root {
-  /* Radius — shadcn scale */
   --radius:    0.625rem;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
 
-  /* Backgrounds */
-  --background:  #09090b;
-  --card:        #18181b;
-  --secondary:   #27272a;
-  --muted:       #27272a;
-  --accent:      #27272a;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Foregrounds */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-mid:  250ms;
+
+  /* Violation colours — same in both themes */
+  --viol-passive: #f97316;
+  --viol-weak:    #0d9488;
+  --viol-long:    #dc2626;
+  --viol-banned:  #9333ea;
+}
+
+
+/* ── 2. DARK THEME TOKENS ─────────────────────────────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background:           #09090b;
+  --card:                 #18181b;
+  --secondary:            #27272a;
+  --muted:                #27272a;
+  --accent:               #27272a;
+
   --foreground:           #fafafa;
   --card-foreground:      #fafafa;
   --primary:              #e4e4e7;
@@ -29,21 +45,13 @@
   --muted-foreground:     #a1a1aa;
   --accent-foreground:    #fafafa;
 
-  /* Borders / ring */
-  --border: rgba(255,255,255,0.10);
-  --input:  rgba(255,255,255,0.15);
-  --ring:   #71717a;
+  --border:               rgba(255,255,255,0.10);
+  --input:                rgba(255,255,255,0.15);
+  --ring:                 #71717a;
 
-  /* Green — shield checkmark accent */
-  --green: #4ade80;
+  --shield-fill:          #18181b;
+  --shield-stroke:        rgba(255,255,255,0.18);
 
-  /* Violation colours */
-  --viol-passive: #fb923c;
-  --viol-weak:    #2dd4bf;
-  --viol-long:    #f87171;
-  --viol-banned:  #c084fc;
-
-  /* Stat colours */
   --stat-error-bg:  rgba(248,113,113,.12);
   --stat-error-fg:  #fca5a5;
   --stat-warn-bg:   rgba(251,191, 36,.10);
@@ -53,18 +61,76 @@
   --stat-score-bg:  rgba( 52,211,153,.10);
   --stat-score-fg:  #6ee7b7;
 
-  /* Typography */
-  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
-
-  /* Motion */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast: 150ms;
-  --dur-mid:  250ms;
+  --viol-passive-bg: rgba(249,115, 22,.10);
+  --viol-weak-bg:    rgba( 13,148,136,.08);
+  --viol-long-bg:    rgba(220, 38, 38,.09);
+  --viol-banned-bg:  rgba(147, 51,234,.09);
 }
 
 
-/* ── 2. RESET & BASE ──────────────────────────────────────── */
+/* ── 3. LIGHT THEME TOKENS ────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --background:           #ffffff;
+  --card:                 #ffffff;
+  --secondary:            #f4f4f5;
+  --muted:                #f4f4f5;
+  --accent:               #f4f4f5;
+
+  --foreground:           #09090b;
+  --card-foreground:      #09090b;
+  --primary:              #18181b;
+  --primary-foreground:   #fafafa;
+  --secondary-foreground: #18181b;
+  --muted-foreground:     #71717a;
+  --accent-foreground:    #18181b;
+
+  --border:               rgba(0,0,0,0.10);
+  --input:                rgba(0,0,0,0.08);
+  --ring:                 #a1a1aa;
+
+  --shield-fill:          #f4f4f5;
+  --shield-stroke:        rgba(0,0,0,0.15);
+
+  --stat-error-bg:  rgba(220, 38, 38,.07);
+  --stat-error-fg:  #b91c1c;
+  --stat-warn-bg:   rgba(161,109,  8,.07);
+  --stat-warn-fg:   #92400e;
+  --stat-info-bg:   rgba( 37,99 ,235,.07);
+  --stat-info-fg:   #1d4ed8;
+  --stat-score-bg:  rgba(  5,150,105,.07);
+  --stat-score-fg:  #065f46;
+
+  --viol-passive-bg: rgba(249,115, 22,.10);
+  --viol-weak-bg:    rgba( 13,148,136,.10);
+  --viol-long-bg:    rgba(220, 38, 38,.08);
+  --viol-banned-bg:  rgba(147, 51,234,.08);
+}
+
+
+/* ── 4. THEME TRANSITION ──────────────────────────────────── */
+/* Smooth crossfade on every colour-bearing property */
+body,
+.site-header,
+.pane,
+.pane-header,
+.pane-step,
+.stat,
+#results-panel,
+.violation-legend,
+.site-footer,
+.btn,
+.doc-textarea {
+  transition:
+    background-color var(--dur-mid) var(--ease-out),
+    border-color     var(--dur-mid) var(--ease-out),
+    color            var(--dur-mid) var(--ease-out),
+    box-shadow       var(--dur-mid) var(--ease-out);
+}
+
+
+/* ── 5. RESET & BASE ──────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -77,7 +143,6 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color-scheme: dark;
 }
 
 body {
@@ -92,7 +157,7 @@ body {
 }
 
 
-/* ── 3. HEADER ────────────────────────────────────────────── */
+/* ── 6. HEADER ────────────────────────────────────────────── */
 .site-header {
   background-color: var(--card);
   border-bottom: 1px solid var(--border);
@@ -118,8 +183,12 @@ body {
   gap: 0.625rem;
 }
 
-.brand-shield {
-  flex-shrink: 0;
+.brand-shield { flex-shrink: 0; }
+
+/* Shield SVG fill/stroke respond to theme */
+.shield-bg {
+  fill:   var(--shield-fill);
+  stroke: var(--shield-stroke);
 }
 
 .brand-text {
@@ -143,16 +212,104 @@ body {
   line-height: 1;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .version-tag {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 400;
-  color: var(--muted-foreground);
   letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  padding: 0.2em 0.5em;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color            var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.version-tag:hover {
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.version-tag:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Underline hint on hover to signal it's clickable */
+.version-tag:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
 }
 
 
-/* ── 4. APP SHELL — two-column grid ──────────────────────── */
+/* ── 7. THEME TOGGLE BUTTON ───────────────────────────────── */
+.btn--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 9999px;
+  background: var(--secondary);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition:
+    background   var(--dur-fast) var(--ease-out),
+    color        var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow   var(--dur-fast) var(--ease-out);
+}
+
+[data-theme="light"] .btn--icon {
+  border-color: rgba(0,0,0,0.15);
+}
+
+.btn--icon:hover {
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--ring);
+}
+
+.btn--icon:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.theme-toggle-label { line-height: 1; }
+
+/* Sun/moon icon visibility driven by data-theme */
+[data-theme="dark"]  .icon-sun  { display: none; }
+[data-theme="dark"]  .icon-moon { display: block; }
+[data-theme="light"] .icon-moon { display: none; }
+[data-theme="light"] .icon-sun  { display: block; }
+
+/* Icon rotation animation on toggle */
+.btn--icon.toggling svg {
+  animation: spin-icon 0.35s var(--ease-out) both;
+}
+
+@keyframes spin-icon {
+  from { transform: rotate(-30deg) scale(0.8); opacity: 0; }
+  to   { transform: rotate(0deg)   scale(1);   opacity: 1; }
+}
+
+
+/* ── 8. APP SHELL ─────────────────────────────────────────── */
 .app-shell {
   flex: 1;
   max-width: 1280px;
@@ -162,11 +319,11 @@ body {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 
-/* ── 5. PANES ─────────────────────────────────────────────── */
+/* ── 9. PANES ─────────────────────────────────────────────── */
 .pane {
   background: var(--card);
   border: 1px solid var(--border);
@@ -174,7 +331,6 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .pane:focus-within {
@@ -203,7 +359,6 @@ body {
 .pane-step {
   font-family: var(--font-mono);
   font-size: 0.625rem;
-  font-weight: 400;
   color: var(--muted-foreground);
   background: var(--secondary);
   border: 1px solid var(--border);
@@ -219,13 +374,10 @@ body {
   white-space: nowrap;
 }
 
-#char-count {
-  color: var(--foreground);
-  transition: color var(--dur-fast);
-}
+#char-count { color: var(--foreground); }
 
 
-/* ── 6. TEXTAREA ──────────────────────────────────────────── */
+/* ── 10. TEXTAREA ─────────────────────────────────────────── */
 .doc-textarea {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -239,7 +391,7 @@ body {
   padding: 1rem;
   border: none;
   outline: none;
-  caret-color: var(--primary);
+  caret-color: var(--foreground);
   tab-size: 2;
   word-break: break-word;
   overflow-wrap: break-word;
@@ -247,18 +399,18 @@ body {
 
 .doc-textarea::placeholder {
   color: var(--muted-foreground);
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
-.doc-textarea::-webkit-scrollbar       { width: 4px; }
-.doc-textarea::-webkit-scrollbar-track { background: transparent; }
-.doc-textarea::-webkit-scrollbar-thumb {
+.doc-textarea::-webkit-scrollbar        { width: 4px; }
+.doc-textarea::-webkit-scrollbar-track  { background: transparent; }
+.doc-textarea::-webkit-scrollbar-thumb  {
   background: var(--secondary);
   border-radius: 2px;
 }
 
 
-/* ── 7. INPUT ACTIONS ─────────────────────────────────────── */
+/* ── 11. INPUT ACTIONS ────────────────────────────────────── */
 .input-actions {
   display: flex;
   align-items: center;
@@ -280,16 +432,15 @@ body {
   align-items: center;
   gap: 0.375rem;
   white-space: nowrap;
-  transition:
-    background   var(--dur-fast) var(--ease-out),
-    color        var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    opacity      var(--dur-fast) var(--ease-out);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    background    var(--dur-fast) var(--ease-out),
+    color         var(--dur-fast) var(--ease-out),
+    border-color  var(--dur-fast) var(--ease-out),
+    opacity       var(--dur-fast) var(--ease-out);
 }
 
-/* Primary — near-white on dark (shadcn dark primary) */
 .btn--primary {
   background: var(--primary);
   color: var(--primary-foreground);
@@ -297,22 +448,19 @@ body {
 }
 
 .btn--primary:hover {
-  background: #f4f4f5;
-  border-color: #f4f4f5;
+  opacity: 0.88;
 }
 
-.btn--primary:active { opacity: 0.85; }
+.btn--primary:active { opacity: 0.75; }
 
 .btn--primary:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* Ghost */
 .btn--ghost {
   background: transparent;
   color: var(--muted-foreground);
-  border-color: transparent;
 }
 
 .btn--ghost:hover {
@@ -335,7 +483,7 @@ body {
 }
 
 
-/* ── 8. STATS BAR ─────────────────────────────────────────── */
+/* ── 12. STATS BAR ────────────────────────────────────────── */
 #stats-bar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -359,13 +507,11 @@ body {
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
-  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .stat-label {
   font-family: var(--font-mono);
   font-size: 0.5625rem;
-  font-weight: 400;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   opacity: 0.65;
@@ -387,7 +533,6 @@ body {
 .stat--score .stat-value,
 .stat--score .stat-label { color: var(--stat-score-fg); }
 
-/* Pop animation when JS updates a value */
 .stat-value.updated {
   animation: pop-value 0.3s var(--ease-out) forwards;
 }
@@ -398,7 +543,7 @@ body {
 }
 
 
-/* ── 9. RESULTS PANEL ─────────────────────────────────────── */
+/* ── 13. RESULTS PANEL ────────────────────────────────────── */
 #results-panel {
   flex: 1;
   min-height: 320px;
@@ -413,14 +558,13 @@ body {
   word-break: break-word;
 }
 
-#results-panel::-webkit-scrollbar       { width: 4px; }
-#results-panel::-webkit-scrollbar-track { background: transparent; }
-#results-panel::-webkit-scrollbar-thumb {
+#results-panel::-webkit-scrollbar        { width: 4px; }
+#results-panel::-webkit-scrollbar-track  { background: transparent; }
+#results-panel::-webkit-scrollbar-thumb  {
   background: var(--secondary);
   border-radius: 2px;
 }
 
-/* Empty state */
 .results-empty {
   min-height: 260px;
   display: flex;
@@ -444,7 +588,7 @@ body {
 }
 
 
-/* ── 10. VIOLATION SPANS ──────────────────────────────────── */
+/* ── 14. VIOLATION SPANS ──────────────────────────────────── */
 .violation-passive,
 .violation-weak,
 .violation-long,
@@ -458,42 +602,42 @@ body {
 
 .violation-passive {
   color: var(--viol-passive);
-  background: rgba(251,146,60,.10);
+  background: var(--viol-passive-bg);
   text-decoration: underline wavy var(--viol-passive);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
 }
-.violation-passive:hover { background: rgba(251,146,60,.20); }
+.violation-passive:hover { filter: brightness(1.1); }
 
 .violation-weak {
   color: var(--viol-weak);
-  background: rgba(45,212,191,.08);
+  background: var(--viol-weak-bg);
   text-decoration: underline dashed var(--viol-weak);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
 }
-.violation-weak:hover { background: rgba(45,212,191,.18); }
+.violation-weak:hover { filter: brightness(1.1); }
 
 .violation-long {
   color: var(--viol-long);
-  background: rgba(248,113,113,.09);
+  background: var(--viol-long-bg);
   text-decoration: underline double var(--viol-long);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
-.violation-long:hover { background: rgba(248,113,113,.18); }
+.violation-long:hover { filter: brightness(1.1); }
 
 .violation-banned {
   color: var(--viol-banned);
-  background: rgba(192,132,252,.09);
+  background: var(--viol-banned-bg);
   text-decoration: underline dotted var(--viol-banned);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
-.violation-banned:hover { background: rgba(192,132,252,.18); }
+.violation-banned:hover { filter: brightness(1.1); }
 
 
-/* ── 11. VIOLATION LEGEND ─────────────────────────────────── */
+/* ── 15. VIOLATION LEGEND ─────────────────────────────────── */
 .violation-legend {
   display: flex;
   flex-wrap: wrap;
@@ -525,18 +669,237 @@ body {
 .legend-swatch--banned  { background: var(--viol-banned); }
 
 
-/* ── 12. FOOTER ───────────────────────────────────────────── */
+/* ── 16. FOOTER ───────────────────────────────────────────── */
 .site-footer {
-  padding: 0.875rem 1.5rem;
-  text-align: center;
+  border-top: 1px solid var(--border);
   font-size: 0.6875rem;
   color: var(--muted-foreground);
-  border-top: 1px solid var(--border);
-  opacity: 0.5;
+}
+
+.site-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.site-footer-inner p { opacity: 0.5; }
+
+/* "What's new" trigger */
+.changelog-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.25em 0.65em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background   var(--dur-fast) var(--ease-out),
+    color        var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.changelog-toggle-btn:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--ring);
+}
+
+.changelog-toggle-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.changelog-toggle-chevron {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.changelog-toggle-btn[aria-expanded="true"] .changelog-toggle-chevron {
+  transform: rotate(180deg);
 }
 
 
-/* ── 13. UTILITY ──────────────────────────────────────────── */
+/* ── 16b. CHANGELOG PANEL ─────────────────────────────────── */
+.changelog-panel {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height   var(--dur-mid) var(--ease-out),
+    opacity      var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out);
+}
+
+.changelog-panel:not([hidden]) {
+  max-height: 480px;
+  opacity: 1;
+}
+
+/* Keep hidden in DOM so CSS transition plays */
+.changelog-panel[hidden] {
+  display: block !important;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.changelog-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 1.25rem;
+}
+
+.changelog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.changelog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+.changelog-gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.changelog-gh-link:hover { color: var(--foreground); }
+
+.changelog-content {
+  overflow-y: auto;
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.changelog-content::-webkit-scrollbar        { width: 4px; }
+.changelog-content::-webkit-scrollbar-track  { background: transparent; }
+.changelog-content::-webkit-scrollbar-thumb  {
+  background: var(--secondary);
+  border-radius: 2px;
+}
+
+.changelog-release {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.changelog-release-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+}
+
+.changelog-version {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.changelog-date {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--muted-foreground);
+}
+
+.changelog-latest-badge {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--stat-score-fg);
+  background: var(--stat-score-bg);
+  border-radius: 999px;
+  padding: 0.1em 0.55em;
+}
+
+.changelog-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-left: 0.125rem;
+}
+
+.changelog-item {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.changelog-item::before {
+  content: '—';
+  color: var(--ring);
+  flex-shrink: 0;
+}
+
+.changelog-loading,
+.changelog-error,
+.changelog-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  padding: 0.5rem 0;
+}
+
+.changelog-error { color: var(--stat-error-fg); }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.changelog-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--border);
+  border-top-color: var(--muted-foreground);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+
+/* ── 17. UTILITY ──────────────────────────────────────────── */
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;
@@ -553,7 +916,7 @@ body {
 }
 
 
-/* ── 14. PAGE LOAD ────────────────────────────────────────── */
+/* ── 18. PAGE LOAD ANIMATION ──────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -565,7 +928,7 @@ body {
 .site-footer  { animation: fade-up 0.3s 0.15s var(--ease-out) both; }
 
 
-/* ── 15. RESPONSIVE ───────────────────────────────────────── */
+/* ── 19. RESPONSIVE ───────────────────────────────────────── */
 @media (max-width: 860px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -583,10 +946,10 @@ body {
   .app-shell     { padding: 0.75rem; gap: 0.75rem; }
   .btn           { height: 1.875rem; font-size: 0.75rem; }
 
-  #stats-bar     { grid-template-columns: repeat(2, 1fr); }
+  #stats-bar { grid-template-columns: repeat(2, 1fr); }
   .stat:nth-child(2) { border-right: none; }
   .stat:nth-child(3) { border-top: 1px solid var(--border); }
-  .stat-value    { font-size: 1.125rem; }
+  .stat-value { font-size: 1.125rem; }
 
   .doc-textarea  { min-height: 200px; font-size: 0.75rem; }
   #results-panel { font-size: 0.75rem; }
