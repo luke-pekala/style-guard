@@ -1,474 +1,158 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Style Guard — Documentation Style Checker</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- ░░ BACKGROUND GRID ░░ -->
-    <div class="bg-grid" aria-hidden="true"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StyleGuard — Documentation Style Checker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-    <!-- ░░ APP WRAPPER ░░ -->
-    <div class="app-wrapper">
-      <!-- ═══════════════════════════
-         HEADER
-    ═══════════════════════════ -->
-      <header class="site-header" role="banner">
-        <div class="header-inner">
-          <div class="brand">
-            <div class="brand-icon" aria-hidden="true">
-              <span class="brand-icon__shield">
-                <svg
-                  width="28"
-                  height="32"
-                  viewBox="0 0 28 32"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M14 0L28 5.6V16C28 24.32 22.008 31.36 14 32C5.992 31.36 0 24.32 0 16V5.6L14 0Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M8 16l4 4 8-8"
-                    stroke="#0a0a0a"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-            </div>
-            <div class="brand-text">
-              <h1 class="brand-name">
-                Style<span class="brand-accent">Guard</span>
-              </h1>
-              <p class="brand-tagline">Documentation Style Checker</p>
-            </div>
-          </div>
+  <!-- ░░ HEADER ░░ -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
 
-          <nav class="header-meta" aria-label="Header info">
-            <span class="meta-badge">v0.0</span>
-            <span class="meta-badge meta-badge--outline">BETA</span>
-          </nav>
+      <div class="brand">
+        <svg class="brand-shield" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 3L4 8v8c0 6.627 5.152 11.95 12 13 6.848-1.05 12-6.373 12-13V8L16 3z"
+                fill="#18181b" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+          <path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4ade80" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text">
+          <h1 class="brand-name">StyleGuard</h1>
+          <p class="brand-tagline">Documentation Style Checker</p>
         </div>
-      </header>
+      </div>
 
-      <!-- ═══════════════════════════
-         MAIN CONTENT
-    ═══════════════════════════ -->
-      <main class="main-content" role="main">
-        <!-- ── EDITOR COLUMN ── -->
-        <section class="editor-section" aria-labelledby="editor-heading">
-          <div class="section-header">
-            <h2 class="section-title" id="editor-heading">
-              <span class="section-title__number">01</span>
-              Paste your documentation
-            </h2>
-            <p class="section-desc">
-              Supports Markdown, plain text, and reStructuredText.
-            </p>
-          </div>
+      <span class="version-tag">v0.0 BETA</span>
 
-          <div class="textarea-wrapper">
-            <label for="doc-input" class="sr-only">Documentation input</label>
-            <textarea
-              id="doc-input"
-              name="doc-input"
-              class="doc-textarea"
-              placeholder="# Getting Started&#10;&#10;Paste or type your documentation here. StyleGuard will analyze it for passive voice, inconsistent terminology, sentence complexity, and more…"
-              spellcheck="true"
-              autocorrect="off"
-              autocapitalize="off"
-              aria-describedby="textarea-hint"
-            ></textarea>
-            <div class="textarea-footer">
-              <span id="textarea-hint" class="char-count" aria-live="polite"
-                >0 characters</span
-              >
-              <span class="textarea-hint-text"
-                >↑ Paste or type your docs above</span
-              >
-            </div>
-          </div>
-
-          <!-- CONTROLS -->
-          <div
-            class="controls-bar"
-            role="toolbar"
-            aria-label="Document analysis controls"
-          >
-            <button
-              id="analyze-btn"
-              type="button"
-              class="btn btn--primary"
-              aria-describedby="analyze-desc"
-            >
-              <span class="btn__icon" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle
-                    cx="7"
-                    cy="7"
-                    r="5.5"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                  />
-                  <path
-                    d="M11 11l3 3"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    d="M5 7h4M7 5v4"
-                    stroke="currentColor"
-                    stroke-width="1.25"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </span>
-              <span class="btn__label">Analyze</span>
-              <span class="btn__shortcut" aria-hidden="true">⌘↵</span>
-            </button>
-            <p id="analyze-desc" class="sr-only">
-              Analyze the pasted documentation for style violations
-            </p>
-
-            <button
-              id="clear-btn"
-              type="button"
-              class="btn btn--ghost"
-              aria-label="Clear input and results"
-            >
-              <span class="btn__icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M2 2l10 10M12 2L2 12"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </span>
-              <span class="btn__label">Clear</span>
-            </button>
-
-            <div class="controls-divider" aria-hidden="true"></div>
-
-            <div
-              class="rule-toggles"
-              role="group"
-              aria-label="Analysis rule toggles"
-            >
-              <label
-                class="toggle-chip"
-                title="Flag passive voice constructions"
-              >
-                <input
-                  type="checkbox"
-                  name="rule-passive"
-                  value="passive"
-                  checked
-                />
-                <span class="toggle-chip__label">Passive Voice</span>
-              </label>
-              <label
-                class="toggle-chip"
-                title="Flag overly long or complex sentences"
-              >
-                <input
-                  type="checkbox"
-                  name="rule-complex"
-                  value="complex"
-                  checked
-                />
-                <span class="toggle-chip__label">Complexity</span>
-              </label>
-              <label class="toggle-chip" title="Flag jargon and unclear terms">
-                <input
-                  type="checkbox"
-                  name="rule-jargon"
-                  value="jargon"
-                  checked
-                />
-                <span class="toggle-chip__label">Jargon</span>
-              </label>
-              <label
-                class="toggle-chip"
-                title="Flag inconsistent capitalization and casing"
-              >
-                <input
-                  type="checkbox"
-                  name="rule-casing"
-                  value="casing"
-                  checked
-                />
-                <span class="toggle-chip__label">Casing</span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <!-- ── RESULTS COLUMN ── -->
-        <section class="results-section" aria-labelledby="results-heading">
-          <div class="section-header">
-            <h2 class="section-title" id="results-heading">
-              <span class="section-title__number">02</span>
-              Analysis results
-            </h2>
-          </div>
-
-          <!-- STATS BAR -->
-          <div
-            id="stats-bar"
-            class="stats-bar"
-            role="region"
-            aria-label="Violation summary"
-            aria-live="polite"
-            data-state="empty"
-          >
-            <div class="stats-bar__empty-state" aria-hidden="true">
-              <svg
-                class="empty-icon"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-              >
-                <path
-                  d="M10 3v7l4 4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8.5"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                />
-              </svg>
-              Run analysis to see a summary
-            </div>
-
-            <dl
-              class="stats-grid"
-              role="list"
-              aria-label="Violation counts by category"
-            >
-              <div class="stat-item stat-item--total" role="listitem">
-                <dt class="stat-label">Total</dt>
-                <dd class="stat-value" id="stat-total">—</dd>
-              </div>
-              <div class="stat-item stat-item--passive" role="listitem">
-                <dt class="stat-label">
-                  <span class="stat-dot" aria-hidden="true"></span>
-                  Passive Voice
-                </dt>
-                <dd class="stat-value" id="stat-passive">—</dd>
-              </div>
-              <div class="stat-item stat-item--complex" role="listitem">
-                <dt class="stat-label">
-                  <span class="stat-dot" aria-hidden="true"></span>
-                  Complexity
-                </dt>
-                <dd class="stat-value" id="stat-complex">—</dd>
-              </div>
-              <div class="stat-item stat-item--jargon" role="listitem">
-                <dt class="stat-label">
-                  <span class="stat-dot" aria-hidden="true"></span>
-                  Jargon
-                </dt>
-                <dd class="stat-value" id="stat-jargon">—</dd>
-              </div>
-              <div class="stat-item stat-item--casing" role="listitem">
-                <dt class="stat-label">
-                  <span class="stat-dot" aria-hidden="true"></span>
-                  Casing
-                </dt>
-                <dd class="stat-value" id="stat-casing">—</dd>
-              </div>
-            </dl>
-
-            <div class="stats-bar__score" aria-label="Style score">
-              <span class="score-label">Score</span>
-              <span class="score-value" id="stat-score">—</span>
-              <div
-                class="score-bar"
-                role="progressbar"
-                aria-valuenow="0"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                aria-labelledby="stat-score"
-              >
-                <div class="score-bar__fill" id="score-bar-fill"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- RESULTS PANEL -->
-          <div
-            id="results-panel"
-            class="results-panel"
-            role="region"
-            aria-label="Annotated document output"
-            aria-live="polite"
-            tabindex="0"
-          >
-            <!-- Results output — populated by app.js -->
-            <div
-              id="results-output"
-              class="results-output"
-              role="article"
-              aria-label="Annotated document"
-            ></div>
-
-            <!-- Empty state — sits after output so CSS :not(:empty) + sibling selector works -->
-            <div class="results-panel__empty">
-              <div class="empty-illustration" aria-hidden="true">
-                <svg
-                  width="64"
-                  height="64"
-                  viewBox="0 0 64 64"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="8"
-                    y="8"
-                    width="48"
-                    height="48"
-                    rx="6"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-dasharray="4 3"
-                  />
-                  <path
-                    d="M20 24h24M20 32h16M20 40h20"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    opacity="0.5"
-                  />
-                  <circle
-                    cx="48"
-                    cy="48"
-                    r="10"
-                    fill="var(--accent)"
-                    opacity="0.12"
-                  />
-                  <path
-                    d="M44 48l3 3 5-5"
-                    stroke="var(--accent)"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </div>
-              <p class="empty-title">No document analyzed yet</p>
-              <p class="empty-subtitle">
-                Paste your documentation and click <strong>Analyze</strong> to
-                see highlighted violations inline.
-              </p>
-            </div>
-          </div>
-
-          <!-- LEGEND + DOWNLOAD -->
-          <footer
-            class="legend"
-            role="complementary"
-            aria-label="Violation type legend"
-          >
-            <span class="legend__title">Legend</span>
-            <ul class="legend__list" role="list">
-              <li class="legend__item">
-                <span
-                  class="legend__swatch legend__swatch--passive"
-                  aria-hidden="true"
-                ></span>
-                Passive voice
-              </li>
-              <li class="legend__item">
-                <span
-                  class="legend__swatch legend__swatch--complex"
-                  aria-hidden="true"
-                ></span>
-                High complexity
-              </li>
-              <li class="legend__item">
-                <span
-                  class="legend__swatch legend__swatch--jargon"
-                  aria-hidden="true"
-                ></span>
-                Jargon
-              </li>
-              <li class="legend__item">
-                <span
-                  class="legend__swatch legend__swatch--casing"
-                  aria-hidden="true"
-                ></span>
-                Casing issue
-              </li>
-            </ul>
-
-            <button
-              id="download-btn"
-              type="button"
-              class="btn btn--download"
-              aria-label="Download analysis report as HTML"
-              disabled
-            >
-              <span class="btn__icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M7 1v8M4 6l3 3 3-3"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M1 10v1a2 2 0 002 2h8a2 2 0 002-2v-1"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </span>
-              <span class="btn__label">Download Report</span>
-            </button>
-          </footer>
-        </section>
-      </main>
-
-      <!-- ═══════════════════════════
-         APP FOOTER
-    ═══════════════════════════ -->
-      <footer class="app-footer" role="contentinfo">
-        <p class="footer-copy">
-          StyleGuard &copy; 2026 (by Luke Pekala). Built for docs that mean what
-          they say.
-        </p>
-        <nav class="footer-links" aria-label="Footer links">
-          <a href="#" class="footer-link">Rules Reference</a>
-          <a href="#" class="footer-link">Keyboard Shortcuts</a>
-          <a href="#" class="footer-link">Report a Bug</a>
-        </nav>
-      </footer>
     </div>
-    <!-- /.app-wrapper -->
+  </header>
 
-    <script src="app.js"></script>
-  </body>
+  <!-- ░░ MAIN — two-column grid ░░ -->
+  <main class="app-shell" role="main">
+
+    <!-- ── LEFT: INPUT PANE ── -->
+    <section class="pane pane--input" aria-labelledby="input-heading">
+
+      <div class="pane-header">
+        <h2 id="input-heading" class="pane-title">
+          <span class="pane-step">01</span>
+          Paste your documentation
+        </h2>
+        <div class="char-counter" aria-live="polite" aria-atomic="true">
+          <span id="char-count">0</span> chars
+        </div>
+      </div>
+
+      <textarea
+        id="doc-input"
+        class="doc-textarea"
+        placeholder="Paste your documentation, README, or technical writing here…"
+        aria-label="Documentation input"
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+      ></textarea>
+
+      <div class="input-actions">
+        <button id="analyze-btn" class="btn btn--primary" type="button"
+                aria-label="Analyze documentation for style violations">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.4"/>
+            <line x1="8.5" y1="8.5" x2="12" y2="12" stroke="currentColor"
+                  stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Analyze
+        </button>
+        <button id="clear-btn" class="btn btn--ghost" type="button"
+                aria-label="Clear input and results">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+            <line x1="1" y1="1" x2="10" y2="10" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="10" y1="1" x2="1" y2="10" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Clear
+        </button>
+        <span class="drop-hint" aria-hidden="true">or drag &amp; drop a .txt / .md file</span>
+      </div>
+
+    </section>
+
+    <!-- ── RIGHT: OUTPUT PANE ── -->
+    <section class="pane pane--output" aria-labelledby="results-heading">
+
+      <div class="pane-header">
+        <h2 id="results-heading" class="pane-title">
+          <span class="pane-step">02</span>
+          Analysis results
+        </h2>
+      </div>
+
+      <!-- Stats bar -->
+      <div id="stats-bar" role="status" aria-live="polite"
+           aria-atomic="true" aria-label="Violation summary">
+        <div class="stat stat--error">
+          <span class="stat-value" id="stat-errors">—</span>
+          <span class="stat-label">Errors</span>
+        </div>
+        <div class="stat stat--warn">
+          <span class="stat-value" id="stat-warnings">—</span>
+          <span class="stat-label">Warnings</span>
+        </div>
+        <div class="stat stat--info">
+          <span class="stat-value" id="stat-suggestions">—</span>
+          <span class="stat-label">Suggestions</span>
+        </div>
+        <div class="stat stat--score">
+          <span class="stat-value" id="stat-score">—</span>
+          <span class="stat-label">Score</span>
+        </div>
+      </div>
+
+      <!-- Results panel -->
+      <div id="results-panel" role="region"
+           aria-labelledby="results-heading" aria-live="polite">
+        <div class="results-empty">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+               aria-hidden="true" class="results-empty-icon">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.3"/>
+            <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+          <p>Run an analysis to see highlighted violations here.</p>
+        </div>
+      </div>
+
+      <!-- Violation legend -->
+      <div class="violation-legend">
+        <span class="legend-item">
+          <span class="legend-swatch legend-swatch--passive"></span>Passive voice
+        </span>
+        <span class="legend-item">
+          <span class="legend-swatch legend-swatch--weak"></span>Weak verb
+        </span>
+        <span class="legend-item">
+          <span class="legend-swatch legend-swatch--long"></span>Long sentence
+        </span>
+        <span class="legend-item">
+          <span class="legend-swatch legend-swatch--banned"></span>Filler word
+        </span>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ░░ FOOTER ░░ -->
+  <footer class="site-footer" role="contentinfo">
+    <p>StyleGuard &mdash; documentation linting for teams that care about craft.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
 </html>
