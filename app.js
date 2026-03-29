@@ -150,10 +150,11 @@ const STYLE_RULES = [
     category: "weak",
   },
 
-  // LONG SENTENCES
+  // LONG SENTENCES — detected by findLongSentenceViolations(), not this regex.
+  // The no-op regex (?!) ensures this rule never fires via the regex loop.
   {
     name: "Long sentence (30+ words)",
-    regex: /[^.!?\n]*(?:\S+\s+){29,}\S+[^.!?\n]*/g,
+    regex: /(?!x)x/,
     description: 'This sentence is 30+ words — too long for easy reading.',
     fix: 'Split it into two or three shorter sentences. One idea per sentence. Aim for 25 words max.',
     category: "long",
@@ -298,12 +299,14 @@ function findLongSentenceViolations(text) {
   const results = [];
   if (!LONG_SENTENCE_RULE) return results;
 
-  // Split preserving offsets: walk through sentence-ending punctuation
-  const re = /[^.!?]+[.!?]?/g;
+  // Split on sentence-ending punctuation OR newlines, preserving offsets.
+  // Match a run of characters that are NOT sentence terminators or newlines,
+  // followed by an optional terminator — this keeps each sentence separate.
+  const re = /[^.!?\n]+[.!?]?/g;
   let m;
   while ((m = re.exec(text)) !== null) {
-    const sentence = m[0];
-    const trimmed  = sentence.trim();
+    const sentence  = m[0];
+    const trimmed   = sentence.trim();
     if (!trimmed) continue;
     const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
     if (wordCount >= 30) {
@@ -551,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Empty state ───────────────────────────────────────────
   function showEmpty(message) {
+    resultsPanel.classList.remove('has-results');
     resultsPanel.innerHTML = `
       <div class="results-empty">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -653,6 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lastText         = text;
 
     if (violations.length === 0) {
+      resultsPanel.classList.remove('has-results');
       resultsPanel.innerHTML = `
         <div class="results-empty">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -666,6 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
       resetLegendBadges();
       if (copyBtn) copyBtn.setAttribute('hidden', '');
     } else {
+      resultsPanel.classList.add('has-results');
       resultsPanel.innerHTML = buildHighlightedHTML(text, violations);
       updateLegendBadges(countByCategory(violations));
       if (copyBtn) copyBtn.removeAttribute('hidden');
