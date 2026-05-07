@@ -792,7 +792,7 @@ function updateScoreCounts(sentences) {
 function renderJargon(paragraphs) {
   var rows = paragraphs.map(function(p, i) {
     var wc   = p.split(/\s+/).filter(Boolean).length;
-    var hits = JARGON.filter(function(j) { return p.toLowerCase().indexOf(j.toLowerCase()) !== -1; });
+    var hits = getGuide().jargon.filter(function(j) { return p.toLowerCase().indexOf(j.toLowerCase()) !== -1; });
     var dens = wc > 0 ? Math.round((hits.length / wc) * 100) : 0;
     var cls  = hits.length === 0 ? 'none' : hits.length <= 1 ? 'low' : hits.length <= 3 ? 'medium' : 'high';
     var bc   = hits.length === 0 ? 'var(--border-hi)' : hits.length <= 1 ? 'var(--blue)' : hits.length <= 3 ? 'var(--orange)' : 'var(--red)';
