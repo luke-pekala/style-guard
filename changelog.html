@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog — StyleGuard Pro</title>
+<meta name="description" content="StyleGuard Pro changelog — what's new, what's fixed, what's coming next.">
+<link rel="canonical" href="https://styleguard.ai-engineer.app/changelog">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[data-theme="dark"]{--bg:#0c0c0d;--surface:#111113;--card:#161618;--border:#222225;--border-hi:#2e2e33;--text:#e8e6e1;--text-mid:#7a7880;--text-dim:#383640;--accent:#f0c040;--red:#e06060;--red-bg:rgba(224,96,96,0.08);--blue:#5090d8;--blue-bg:rgba(80,144,216,0.08);--green:#38b878;--green-bg:rgba(56,184,120,0.08)}
+[data-theme="light"]{--bg:#f8f6f1;--surface:#fff;--card:#f0ede8;--border:#dedad2;--border-hi:#c8c4bc;--text:#18181a;--text-mid:#68666e;--text-dim:#c0bdc8;--accent:#b08000;--red:#c83030;--red-bg:rgba(200,48,48,0.07);--blue:#2060a8;--blue-bg:rgba(32,96,168,0.07);--green:#1a7848;--green-bg:rgba(26,120,72,0.07)}
+html{font-size:14px}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;line-height:1.7;transition:background .2s,color .2s}
+.topbar{border-bottom:1px solid var(--border);padding:0 24px;height:44px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;background:var(--bg)}
+.logo-wrap{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.logo-mark{font-size:.72rem;font-weight:600;background:var(--text);color:var(--bg);padding:1px 5px;letter-spacing:.04em}
+.logo-name{font-size:.8rem;font-weight:500}
+.logo-desc{color:var(--text-mid);font-weight:300;font-size:.8rem}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.btn-top{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-mid);border:1px solid var(--border);background:var(--surface);padding:3px 10px;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block}
+.btn-top:hover{border-color:var(--border-hi);color:var(--text)}
+.topbar-version{font-size:.65rem;color:var(--text-dim)}
+main{max-width:680px;margin:0 auto;width:100%;padding:48px 24px 80px;display:flex;flex-direction:column;gap:36px}
+.page-title{font-size:1.1rem;font-weight:500;color:var(--text)}
+.page-title .sec-num{color:var(--text-dim);margin-right:12px}
+.release-head{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.r-tag{font-size:.82rem;font-weight:500;color:var(--accent)}
+.r-badge{font-size:.58rem;padding:2px 7px;border:1px solid;letter-spacing:.08em}
+.r-badge.new{color:var(--green);border-color:var(--green);background:var(--green-bg)}
+.r-date{font-size:.65rem;color:var(--text-dim);margin-left:auto}
+.change-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:7px}
+.change-list li{display:flex;align-items:baseline;gap:10px;font-size:.78rem;color:var(--text-mid);line-height:1.6}
+.ctype{font-size:.58rem;padding:2px 6px;border:1px solid;letter-spacing:.06em;flex-shrink:0}
+.ctype.added{color:var(--green);border-color:var(--green);background:var(--green-bg)}
+.ctype.improved{color:var(--blue);border-color:var(--blue);background:var(--blue-bg)}
+.ctype.fixed{color:var(--red);border-color:var(--red);background:var(--red-bg)}
+.upcoming{background:var(--card);border:1px solid var(--border);padding:18px 20px}
+.upcoming h2{font-size:.75rem;font-weight:600;color:var(--text);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.upcoming ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:7px}
+.upcoming li{font-size:.78rem;color:var(--text-mid);display:flex;align-items:center;gap:10px}
+.upcoming li::before{content:'→';color:var(--text-dim);font-size:.7rem;flex-shrink:0}
+footer{border-top:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;max-width:680px;margin:0 auto;width:100%;font-size:.65rem}
+.footer-text{color:var(--text-dim)}
+.footer-link{color:var(--text-dim);text-decoration:none;transition:color .15s}
+.footer-link:hover{color:var(--text)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo-wrap" href="/">
+    <span class="logo-mark">SG</span>
+    <span class="logo-name">StyleGuard Pro</span>
+    <span class="logo-desc">&nbsp;documentation style checker</span>
+  </a>
+  <div class="topbar-right">
+    <a href="/" class="btn-top">← App</a>
+    <button class="btn-top" onclick="toggleTheme()" id="themeToggle">Light</button>
+    <span class="topbar-version">v1.0-pro</span>
+  </div>
+</header>
+
+<main>
+  <div class="page-title"><span class="sec-num">01</span> Changelog</div>
+
+  <div>
+    <div class="release-head">
+      <span class="r-tag">v1.0-pro</span>
+      <span class="r-badge new">NEW</span>
+      <span class="r-date">7 May 2026</span>
+    </div>
+    <ul class="change-list">
+      <li><span class="ctype added">Added</span> Inline highlight layer — colour overlays in editor with on/off toggle</li>
+      <li><span class="ctype added">Added</span> Animated score ring with grade label (Excellent / Good / Fair / Needs work)</li>
+      <li><span class="ctype added">Added</span> Apply fix — weak verbs and filler phrases replaced directly in the textarea</li>
+      <li><span class="ctype added">Added</span> Jargon density per paragraph — table with bar chart and percentage score</li>
+      <li><span class="ctype added">Added</span> Sentence length heat map — full document coloured by sentence length</li>
+      <li><span class="ctype added">Added</span> Rule breakdown panel — all 5 rule types with proportion bars</li>
+      <li><span class="ctype added">Added</span> Readability metrics — Flesch–Kincaid grade, Flesch Reading Ease, avg sentence length, reading level</li>
+      <li><span class="ctype added">Added</span> Export report — downloads plain text analysis report</li>
+      <li><span class="ctype added">Added</span> Style guide selector — Microsoft, Chicago, Google Dev Docs, APA, Custom</li>
+      <li><span class="ctype added">Added</span> Filter tabs — isolate violations by type</li>
+      <li><span class="ctype added">Added</span> ⌘↵ keyboard shortcut to trigger analysis</li>
+      <li><span class="ctype added">Added</span> Google Analytics 4 with custom events</li>
+      <li><span class="ctype added">Added</span> Full SEO — meta tags, Open Graph, Twitter Card, JSON-LD structured data</li>
+      <li><span class="ctype improved">Improved</span> Score algorithm — density-based penalty, floor at 5 so ring always renders</li>
+      <li><span class="ctype improved">Improved</span> Design system — JetBrains Mono only, aligned with ai-engineer.app network</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="release-head">
+      <span class="r-tag">v0.2-beta</span>
+      <span class="r-date">18 April 2026</span>
+    </div>
+    <ul class="change-list">
+      <li><span class="ctype added">Added</span> Dark/light theme toggle</li>
+      <li><span class="ctype added">Added</span> Drag & drop .txt and .md file support</li>
+      <li><span class="ctype added">Added</span> Version history panel</li>
+      <li><span class="ctype improved">Improved</span> Score display with Errors / Warnings / Suggestions breakdown</li>
+    </ul>
+  </div>
+
+  <div>
+    <div class="release-head">
+      <span class="r-tag">v0.1-beta</span>
+      <span class="r-date">1 April 2026</span>
+    </div>
+    <ul class="change-list">
+      <li><span class="ctype added">Added</span> Initial release — passive voice detection</li>
+      <li><span class="ctype added">Added</span> Weak verb flagging (utilize, leverage, facilitate)</li>
+      <li><span class="ctype added">Added</span> Long sentence detection (&gt;25 words)</li>
+      <li><span class="ctype added">Added</span> Filler word detection</li>
+      <li><span class="ctype added">Added</span> Results panel with Apply fix / Ignore actions</li>
+    </ul>
+  </div>
+
+  <div class="upcoming">
+    <h2>Coming in v2.0</h2>
+    <ul>
+      <li>Claude API integration — semantic analysis beyond regex</li>
+      <li>Custom style guide upload — enforce your own house rules</li>
+      <li>Batch file analysis — check multiple documents at once</li>
+      <li>Tracked-changes diff — before/after view of clean version</li>
+      <li>VS Code extension</li>
+      <li>Team accounts with shared rule sets</li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <span class="footer-text">StyleGuard Pro — documentation linting for teams that care about craft.</span>
+  <div style="flex:1"></div>
+  <a href="/about"   class="footer-link">About</a>
+  <a href="/privacy" class="footer-link">Privacy</a>
+</footer>
+
+<script>
+function toggleTheme(){
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = isDark ? 'Dark' : 'Light';
+}
+</script>
+</body>
+</html>

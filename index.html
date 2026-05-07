@@ -1,263 +1,862 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StyleGuard — Documentation Style Checker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Apply saved theme before first paint to prevent flash -->
-  <script>
-    (function () {
-      try {
-        const saved = localStorage.getItem('sg-theme');
-        if (saved === 'light' || saved === 'dark') {
-          document.documentElement.setAttribute('data-theme', saved);
-        } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-          document.documentElement.setAttribute('data-theme', 'light');
-        }
-      } catch (e) {}
-    })();
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StyleGuard Pro — Documentation Style Checker</title>
+<meta name="description" content="StyleGuard Pro is a free real-time documentation style checker. Detect passive voice, weak verbs, jargon, long sentences, and filler words instantly.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://styleguard.ai-engineer.app/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="StyleGuard Pro — Documentation Style Checker">
+<meta property="og:description" content="Real-time style violation detection for any documentation. Free for technical writers.">
+<meta property="og:url" content="https://styleguard.ai-engineer.app/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"StyleGuard Pro","description":"Real-time documentation style checker","url":"https://styleguard.ai-engineer.app/","applicationCategory":"Writing Tool","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+[data-theme="dark"]{
+  --bg:#0c0c0d;--surface:#111113;--card:#161618;--border:#222225;--border-hi:#2e2e33;
+  --text:#e8e6e1;--text-mid:#7a7880;--text-dim:#383640;--accent:#f0c040;
+  --red:#e06060;--red-bg:rgba(224,96,96,0.08);
+  --orange:#e08840;--orange-bg:rgba(224,136,64,0.08);
+  --blue:#5090d8;--blue-bg:rgba(80,144,216,0.08);
+  --green:#38b878;--green-bg:rgba(56,184,120,0.08);
+  --purple:#9070d0;--purple-bg:rgba(144,112,208,0.08);
+  --heat-low:rgba(80,144,216,0.14);--heat-mid:rgba(224,136,64,0.22);--heat-high:rgba(224,96,96,0.30);
+}
+[data-theme="light"]{
+  --bg:#f8f6f1;--surface:#fff;--card:#f0ede8;--border:#dedad2;--border-hi:#c8c4bc;
+  --text:#18181a;--text-mid:#68666e;--text-dim:#c0bdc8;--accent:#b08000;
+  --red:#c83030;--red-bg:rgba(200,48,48,0.07);
+  --orange:#b06020;--orange-bg:rgba(176,96,32,0.07);
+  --blue:#2060a8;--blue-bg:rgba(32,96,168,0.07);
+  --green:#1a7848;--green-bg:rgba(26,120,72,0.07);
+  --purple:#6040a8;--purple-bg:rgba(96,64,168,0.07);
+  --heat-low:rgba(32,96,168,0.11);--heat-mid:rgba(176,96,32,0.17);--heat-high:rgba(200,48,48,0.22);
+}
+html{font-size:14px}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;line-height:1.6;transition:background .2s,color .2s}
+/* TOPBAR */
+.topbar{border-bottom:1px solid var(--border);padding:0 24px;height:44px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;background:var(--bg);font-size:.8rem}
+.topbar-logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.logo-mark{font-size:.72rem;font-weight:600;background:var(--text);color:var(--bg);padding:1px 5px;letter-spacing:.04em}
+.logo-name{font-size:.8rem;font-weight:500}
+.logo-desc{color:var(--text-mid);font-weight:300}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.topbar-version{font-size:.65rem;color:var(--text-dim);letter-spacing:.04em}
+.sg-select{font-family:'JetBrains Mono',monospace;font-size:.7rem;background:none;border:1px solid var(--border);color:var(--text-mid);padding:3px 8px;cursor:pointer;outline:none;transition:border-color .15s,color .15s;-webkit-appearance:none}
+.sg-select:hover,.sg-select:focus{border-color:var(--border-hi);color:var(--text)}
+.btn-top{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-mid);border:1px solid var(--border);background:var(--surface);padding:3px 10px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.btn-top:hover{border-color:var(--border-hi);color:var(--text)}
+/* MAIN */
+.main{flex:1;max-width:960px;margin:0 auto;width:100%;padding:40px 24px 80px;display:flex;flex-direction:column;gap:40px}
+/* SECTION HEAD */
+.sec-head{display:flex;align-items:baseline;margin-bottom:12px}
+.sec-h2{font-size:.88rem;font-weight:500;color:var(--text);letter-spacing:.01em}
+.sec-num{color:var(--text-dim);margin-right:12px}
+.sec-meta{font-size:.68rem;color:var(--text-dim);margin-left:auto;letter-spacing:.04em}
+/* EDITOR */
+.editor-wrap{border:1px solid var(--border);background:var(--surface);transition:border-color .15s}
+.editor-wrap:focus-within{border-color:var(--border-hi)}
+.editor-topbar{border-bottom:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;gap:10px;background:var(--card)}
+.etb-label{font-size:.65rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase}
+.etb-spacer{flex:1}
+.char-count{font-size:.65rem;color:var(--text-dim)}
+.hl-toggle{font-size:.65rem;color:var(--text-dim);background:none;border:1px solid var(--border);padding:2px 8px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;letter-spacing:.04em}
+.hl-toggle:hover{border-color:var(--border-hi);color:var(--text)}
+.hl-toggle.on{border-color:var(--accent);color:var(--accent)}
+.editor-body{position:relative}
+.hl-layer{position:absolute;inset:0;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.75;white-space:pre-wrap;word-wrap:break-word;color:transparent;pointer-events:none;overflow:hidden;tab-size:2}
+.hl-layer mark{border-radius:1px;color:transparent}
+.hl-layer mark.passive{background:var(--red-bg);outline:1px solid rgba(224,96,96,0.25)}
+.hl-layer mark.weak{background:var(--orange-bg);outline:1px solid rgba(224,136,64,0.25)}
+.hl-layer mark.jargon{background:var(--purple-bg);outline:1px solid rgba(144,112,208,0.25)}
+.hl-layer mark.filler{background:rgba(240,192,64,0.08);outline:1px solid rgba(240,192,64,0.25)}
+.doc-textarea{position:relative;display:block;width:100%;min-height:200px;background:transparent;border:none;outline:none;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.75;color:var(--text);padding:14px;tab-size:2;caret-color:var(--accent)}
+.doc-textarea::placeholder{color:var(--text-dim)}
+.editor-footer{border-top:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;gap:8px;background:var(--card);flex-wrap:wrap}
+.btn-primary{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:500;background:var(--text);color:var(--bg);border:none;padding:5px 14px;cursor:pointer;transition:opacity .15s;letter-spacing:.03em}
+.btn-primary:hover{opacity:.8}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-secondary{font-family:'JetBrains Mono',monospace;font-size:.7rem;background:none;border:1px solid var(--border);color:var(--text-mid);padding:4px 10px;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.btn-secondary:hover{border-color:var(--border-hi);color:var(--text)}
+.drop-hint{font-size:.65rem;color:var(--text-dim);margin-left:4px}
+/* SCORE STRIP */
+.score-strip{display:grid;grid-template-columns:repeat(4,1fr) 100px;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:16px}
+.sc-cell{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:4px;transition:background .12s}
+.sc-cell:hover{background:var(--card)}
+.sc-cell.ring-cell{align-items:center;justify-content:center;gap:6px;background:var(--card)}
+.sc-val{font-size:1.7rem;font-weight:300;line-height:1;color:var(--text)}
+.sc-val.red{color:var(--red)}.sc-val.orange{color:var(--orange)}.sc-val.blue{color:var(--blue)}.sc-val.green{color:var(--green)}
+.sc-key{font-size:.58rem;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase}
+.sc-ring{position:relative;width:52px;height:52px}
+.sc-ring svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--border-hi);stroke-width:4}
+.ring-fill{fill:none;stroke:var(--green);stroke-width:4;stroke-linecap:round;stroke-dasharray:138;stroke-dashoffset:138;transition:stroke-dashoffset .8s cubic-bezier(0.25,1,0.5,1),stroke .4s}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:500;color:var(--text)}
+.ring-grade{font-size:.58rem;color:var(--text-dim);letter-spacing:.08em}
+/* FILTER */
+.filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ftab{font-family:'JetBrains Mono',monospace;font-size:.62rem;padding:3px 9px;border:1px solid var(--border);background:none;color:var(--text-mid);cursor:pointer;transition:all .12s;letter-spacing:.04em;display:flex;align-items:center;gap:5px}
+.ftab:hover{border-color:var(--border-hi);color:var(--text)}
+.tc{font-size:.55rem;background:var(--card);padding:0 4px;min-width:14px;text-align:center}
+.ftab.active.all{color:var(--text);border-color:var(--border-hi);background:var(--card)}
+.ftab.active.passive{color:var(--red);border-color:var(--red);background:var(--red-bg)}
+.ftab.active.weak{color:var(--orange);border-color:var(--orange);background:var(--orange-bg)}
+.ftab.active.jargon{color:var(--purple);border-color:var(--purple);background:var(--purple-bg)}
+.ftab.active.long{color:var(--blue);border-color:var(--blue);background:var(--blue-bg)}
+.ftab.active.filler{color:var(--accent);border-color:var(--accent);background:rgba(240,192,64,0.08)}
+.filter-gap{flex:1}
+.btn-copy{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-mid);background:none;border:1px solid var(--border);padding:3px 9px;cursor:pointer;transition:all .12s}
+.btn-copy:hover{border-color:var(--border-hi);color:var(--text)}
+/* RESULTS */
+.results-pane{border:1px solid var(--border);background:var(--surface);min-height:200px}
+.results-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:8px}
+.re-icon{font-size:1.1rem;color:var(--text-dim);opacity:.4}
+.re-text{font-size:.65rem;color:var(--text-dim);letter-spacing:.06em}
+.vio{border-bottom:1px solid var(--border);padding:12px 16px;display:grid;grid-template-columns:84px 1fr auto;gap:10px 14px;align-items:start;transition:background .1s;animation:fadeUp .2s ease both}
+.vio:last-child{border-bottom:none}
+.vio:hover{background:var(--card)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.vtag{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border:1px solid;white-space:nowrap;display:inline-block;margin-top:2px}
+.vtag.passive{color:var(--red);border-color:var(--red);background:var(--red-bg)}
+.vtag.weak{color:var(--orange);border-color:var(--orange);background:var(--orange-bg)}
+.vtag.jargon{color:var(--purple);border-color:var(--purple);background:var(--purple-bg)}
+.vtag.long{color:var(--blue);border-color:var(--blue);background:var(--blue-bg)}
+.vtag.filler{color:var(--accent);border-color:var(--accent);background:rgba(240,192,64,0.08)}
+.vflagged{font-size:.75rem;color:var(--text);margin-bottom:4px;line-height:1.55}
+.vflagged mark{background:none;text-decoration:underline wavy;text-underline-offset:3px;text-decoration-thickness:1px}
+.vflagged mark.passive{color:var(--red);text-decoration-color:var(--red)}
+.vflagged mark.weak{color:var(--orange);text-decoration-color:var(--orange)}
+.vflagged mark.jargon{color:var(--purple);text-decoration-color:var(--purple)}
+.vflagged mark.long{color:var(--blue);text-decoration-color:var(--blue)}
+.vflagged mark.filler{color:var(--accent);text-decoration-color:var(--accent)}
+.vsugg{font-size:.72rem;color:var(--text-mid);line-height:1.5}
+.vsugg strong{color:var(--green);font-weight:500}
+.vactions{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.vline{font-size:.55rem;color:var(--text-dim);margin-bottom:2px}
+.btn-fix{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--green);background:var(--green-bg);border:1px solid var(--green);padding:3px 8px;cursor:pointer;transition:opacity .15s}
+.btn-fix:hover{opacity:.7}
+.btn-ignore{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text-dim);background:none;border:1px solid var(--border);padding:3px 8px;cursor:pointer;transition:all .15s}
+.btn-ignore:hover{color:var(--text-mid);border-color:var(--border-hi)}
+/* JARGON TABLE */
+.data-table{border:1px solid var(--border);background:var(--surface)}
+.dt-header{border-bottom:1px solid var(--border);padding:7px 14px;display:grid;grid-template-columns:24px 1fr 56px 120px;gap:14px;background:var(--card)}
+.dt-header span{font-size:.58rem;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase}
+.dt-row{border-bottom:1px solid var(--border);padding:9px 14px;display:grid;grid-template-columns:24px 1fr 56px 120px;gap:14px;align-items:center;transition:background .1s}
+.dt-row:last-child{border-bottom:none}
+.dt-row:hover{background:var(--card)}
+.dt-num{font-size:.62rem;color:var(--text-dim)}
+.dt-preview{font-size:.7rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dt-count{font-size:.7rem;text-align:right}
+.dt-count.none{color:var(--text-dim)}.dt-count.low{color:var(--blue)}.dt-count.medium{color:var(--orange)}.dt-count.high{color:var(--red)}
+.dt-bar-wrap{display:flex;align-items:center;gap:8px}
+.dt-bar-bg{flex:1;height:2px;background:var(--border)}
+.dt-bar{height:100%;transition:width .6s cubic-bezier(0.25,1,0.5,1)}
+.dt-pct{font-size:.58rem;color:var(--text-dim);width:26px;text-align:right;flex-shrink:0}
+.dt-empty{padding:28px 14px;text-align:center;font-size:.65rem;color:var(--text-dim)}
+/* HEATMAP */
+.heatmap-wrap{border:1px solid var(--border);background:var(--surface)}
+.hm-topbar{border-bottom:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;gap:18px;background:var(--card)}
+.hm-legend-label{font-size:.58rem;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase}
+.hm-leg{display:flex;align-items:center;gap:5px;font-size:.6rem;color:var(--text-mid)}
+.hm-swatch{width:8px;height:8px}
+.hm-body{padding:16px 14px;font-size:.78rem;line-height:2.0;color:var(--text)}
+.hs{border-radius:1px;padding:1px 0;display:inline;cursor:default}
+.hs:hover{outline:1px solid var(--border-hi)}
+.hs.low{background:var(--heat-low)}.hs.mid{background:var(--heat-mid)}.hs.high{background:var(--heat-high)}
+.hm-empty{padding:36px 14px;text-align:center;font-size:.65rem;color:var(--text-dim)}
+/* BREAKDOWN */
+.breakdown-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.bd-cell{background:var(--surface);padding:14px 14px 12px;transition:background .12s}
+.bd-cell:hover{background:var(--card)}
+.bd-rule{font-size:.58rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.bd-num{font-size:1.5rem;font-weight:300;line-height:1;margin-bottom:6px}
+.bd-bar-wrap{height:1px;background:var(--border)}
+.bd-bar{height:100%;transition:width .6s cubic-bezier(0.25,1,0.5,1)}
+/* READABILITY */
+.r-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.r-cell{background:var(--surface);padding:16px 16px 14px;transition:background .12s}
+.r-cell:hover{background:var(--card)}
+.r-cell.hi{background:var(--card)}
+.r-val{font-size:1.8rem;font-weight:300;line-height:1;color:var(--text);margin-bottom:5px;transition:color .3s}
+.r-val.good{color:var(--green)}.r-val.ok{color:var(--accent)}.r-val.warn{color:var(--orange)}
+.r-label{font-size:.58rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;line-height:1.6}
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;max-width:960px;margin:0 auto;width:100%;font-size:.65rem}
+.footer-text{color:var(--text-dim)}
+.footer-link{color:var(--text-dim);text-decoration:none;transition:color .15s}
+.footer-link:hover{color:var(--text)}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-hi)}
+@media(max-width:700px){
+  .topbar{padding:0 14px}.main{padding:24px 14px 60px}
+  .score-strip{grid-template-columns:1fr 1fr}
+  .sc-cell.ring-cell{grid-column:span 2;flex-direction:row}
+  .breakdown-grid{grid-template-columns:1fr 1fr}
+  .r-grid{grid-template-columns:1fr 1fr}
+  .vio{grid-template-columns:auto 1fr}
+  .vactions{flex-direction:row;grid-column:1/-1}
+  .sg-select{display:none}
+}
+</style>
 </head>
 <body>
 
-  <!-- ░░ HEADER ░░ -->
-  <header class="site-header" role="banner">
-    <div class="header-inner">
-
-      <div class="brand">
-        <svg class="brand-shield" width="28" height="28" viewBox="0 0 32 32"
-             fill="none" aria-hidden="true">
-          <path d="M16 3L4 8v8c0 6.627 5.152 11.95 12 13 6.848-1.05 12-6.373 12-13V8L16 3z"
-                class="shield-bg" stroke-width="1.5"/>
-          <path d="M11 16.5l3.5 3.5 6.5-7" stroke="#4ade80" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div class="brand-text">
-          <h1 class="brand-name">StyleGuard</h1>
-          <p class="brand-tagline">Documentation Style Checker</p>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <button id="version-tag" class="version-tag" type="button"
-                aria-controls="changelog-panel" aria-expanded="false">v0.2-beta</button>
-
-        <button id="theme-toggle" class="btn btn--icon"
-                type="button" aria-label="Toggle light/dark mode">
-          <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"
-                  stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="theme-toggle-label label-dark">Dark</span>
-          <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/>
-            <line x1="12" y1="2"  x2="12" y2="4"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="12" y1="20" x2="12" y2="22" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="2"  y1="12" x2="4"  y2="12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="20" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="4.22"  y1="4.22"  x2="5.64"  y2="5.64"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"  stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          </svg>
-          <span class="theme-toggle-label label-light">Light</span>
-        </button>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- ░░ MAIN ░░ -->
-  <main class="app-shell" role="main">
-
-    <!-- ── LEFT: INPUT PANE ── -->
-    <section class="pane pane--input" aria-labelledby="input-heading">
-
-      <div class="pane-header">
-        <h2 id="input-heading" class="pane-title">
-          <span class="pane-step">01</span>
-          Paste your documentation
-        </h2>
-        <div class="char-counter" aria-live="polite" aria-atomic="true">
-          <span id="char-count">0</span> chars
-        </div>
-      </div>
-
-      <textarea
-        id="doc-input"
-        class="doc-textarea"
-        aria-label="Documentation input"
-        spellcheck="false"
-        autocorrect="off"
-        autocapitalize="off"
-      ></textarea>
-
-      <div class="input-actions">
-        <button id="analyze-btn" class="btn btn--primary" type="button"
-                aria-label="Analyze documentation for style violations">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-            <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.4"/>
-            <line x1="8.5" y1="8.5" x2="12" y2="12" stroke="currentColor"
-                  stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-          Analyze
-        </button>
-        <button id="clear-btn" class="btn btn--ghost" type="button"
-                aria-label="Clear input and results">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-            <line x1="1" y1="1" x2="10" y2="10" stroke="currentColor"
-                  stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="10" y1="1" x2="1" y2="10" stroke="currentColor"
-                  stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Clear
-        </button>
-        <span class="drop-hint" aria-hidden="true">or drag &amp; drop a .txt / .md file</span>
-      </div>
-
-    </section>
-
-    <!-- ── RIGHT: OUTPUT PANE ── -->
-    <section class="pane pane--output" aria-labelledby="results-heading">
-
-      <div class="pane-header">
-        <h2 id="results-heading" class="pane-title">
-          <span class="pane-step">02</span>
-          Analysis results
-        </h2>
-        <!-- Copy clean text button — hidden until analysis runs -->
-        <button id="copy-btn" class="btn btn--ghost btn--copy" type="button"
-                aria-label="Copy clean text with violations removed" hidden>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-            <rect x="4" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.3"/>
-            <path d="M8 4V2.5A.5.5 0 0 0 7.5 2h-5a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5H4"
-                  stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-          <span id="copy-btn-label">Copy clean</span>
-        </button>
-      </div>
-
-      <!-- Stats bar -->
-      <div id="stats-bar" role="status" aria-live="polite"
-           aria-atomic="true" aria-label="Violation summary">
-        <div class="stat stat--error">
-          <span class="stat-value" id="stat-errors">—</span>
-          <span class="stat-label">Errors</span>
-        </div>
-        <div class="stat stat--warn">
-          <span class="stat-value" id="stat-warnings">—</span>
-          <span class="stat-label">Warnings</span>
-        </div>
-        <div class="stat stat--info">
-          <span class="stat-value" id="stat-suggestions">—</span>
-          <span class="stat-label">Suggestions</span>
-        </div>
-        <div class="stat stat--score">
-          <span class="stat-value" id="stat-score">—</span>
-          <span class="stat-label">Score</span>
-        </div>
-      </div>
-
-      <!-- Results panel -->
-      <div id="results-panel" role="region"
-           aria-labelledby="results-heading" aria-live="polite">
-        <div class="results-empty">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-               aria-hidden="true" class="results-empty-icon">
-            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.3"/>
-            <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.3"/>
-          </svg>
-          <p>Run an analysis to see highlighted violations here.</p>
-        </div>
-      </div>
-
-      <!-- Violation legend with count badges -->
-      <div class="violation-legend" id="violation-legend">
-        <span class="legend-item" data-category="passive">
-          <span class="legend-swatch legend-swatch--passive"></span>
-          Passive voice
-          <span class="legend-badge" id="badge-passive" hidden>0</span>
-        </span>
-        <span class="legend-item" data-category="weak">
-          <span class="legend-swatch legend-swatch--weak"></span>
-          Weak verb
-          <span class="legend-badge" id="badge-weak" hidden>0</span>
-        </span>
-        <span class="legend-item" data-category="long">
-          <span class="legend-swatch legend-swatch--long"></span>
-          Long sentence
-          <span class="legend-badge" id="badge-long" hidden>0</span>
-        </span>
-        <span class="legend-item" data-category="banned">
-          <span class="legend-swatch legend-swatch--banned"></span>
-          Filler word
-          <span class="legend-badge" id="badge-banned" hidden>0</span>
-        </span>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- ░░ INLINE FIX POPOVER (rendered by JS, positioned on click) ░░ -->
-  <div id="fix-popover" class="fix-popover" role="tooltip" hidden>
-    <div class="fix-popover-rule" id="fix-popover-rule"></div>
-    <div class="fix-popover-body" id="fix-popover-body"></div>
-    <div class="fix-popover-suggestion" id="fix-popover-suggestion"></div>
+<header class="topbar" role="banner">
+  <a class="topbar-logo" href="/" aria-label="StyleGuard Pro">
+    <span class="logo-mark">SG</span>
+    <span class="logo-name">StyleGuard Pro</span>
+    <span class="logo-desc">&nbsp;documentation style checker</span>
+  </a>
+  <div class="topbar-right">
+    <select class="sg-select" id="styleGuide" aria-label="Select style guide">
+      <option>Microsoft Style Guide</option>
+      <option>Chicago Manual of Style</option>
+      <option>Google Developer Docs</option>
+      <option>APA 7th Edition</option>
+      <option>Custom Rules</option>
+    </select>
+    <button class="btn-top" id="themeToggle" onclick="toggleTheme()">Light</button>
+    <button class="btn-top" onclick="exportReport()">⤓ Export</button>
+    <span class="topbar-version">v1.0-pro</span>
   </div>
+</header>
 
-  <!-- ░░ CHANGELOG PANEL ░░ -->
-  <aside id="changelog-panel" class="changelog-panel" aria-label="Version history" hidden>
-    <div class="changelog-inner">
-      <div class="changelog-header">
-        <span class="changelog-title">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/>
-            <line x1="7" y1="4" x2="7" y2="7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <circle cx="7" cy="9.5" r="0.6" fill="currentColor"/>
-          </svg>
-          Version history
-        </span>
-        <a class="changelog-gh-link"
-           href="https://github.com/lukepekala1-afk/style-guard/releases"
-           target="_blank" rel="noopener noreferrer">
-          View on GitHub
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-            <path d="M2 8L8 2M8 2H4M8 2V6" stroke="currentColor" stroke-width="1.3"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
+<main class="main" role="main">
+
+  <!-- 01 EDITOR -->
+  <section>
+    <div class="sec-head">
+      <h1 class="sec-h2"><span class="sec-num">01</span> Paste your documentation</h1>
+      <span class="sec-meta" id="charCount">0 chars</span>
+    </div>
+    <div class="editor-wrap">
+      <div class="editor-topbar">
+        <span class="etb-label">Editor</span>
+        <div class="etb-spacer"></div>
+        <button class="hl-toggle on" id="hlToggle" onclick="toggleHighlight()">highlights on</button>
+        <span class="char-count" id="wordCount">0 words</span>
       </div>
-      <div id="changelog-content" class="changelog-content">
-        <div class="changelog-loading">
-          <span class="changelog-spinner" aria-hidden="true"></span>
-          Loading releases…
+      <div class="editor-body">
+        <div class="hl-layer" id="hlLayer" aria-hidden="true"></div>
+        <textarea class="doc-textarea" id="docInput" spellcheck="false"
+          placeholder="Paste your documentation here, or drag &amp; drop a .txt / .md file…"
+          oninput="onInput()"></textarea>
+      </div>
+      <div class="editor-footer">
+        <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">Analyze ⌘↵</button>
+        <button class="btn-secondary" onclick="clearDoc()">Clear</button>
+        <span class="drop-hint">or drag &amp; drop a .txt / .md file</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 RESULTS -->
+  <section>
+    <div class="sec-head">
+      <h2 class="sec-h2"><span class="sec-num">02</span> Analysis results</h2>
+    </div>
+    <div class="score-strip">
+      <div class="sc-cell"><div class="sc-val red"    id="sc-errors">—</div><div class="sc-key">Errors</div></div>
+      <div class="sc-cell"><div class="sc-val orange" id="sc-warnings">—</div><div class="sc-key">Warnings</div></div>
+      <div class="sc-cell"><div class="sc-val blue"   id="sc-suggestions">—</div><div class="sc-key">Suggestions</div></div>
+      <div class="sc-cell"><div class="sc-val green"  id="sc-clean">—</div><div class="sc-key">Clean sentences</div></div>
+      <div class="sc-cell ring-cell">
+        <div class="sc-ring">
+          <svg width="52" height="52" viewBox="0 0 52 52">
+            <circle class="ring-bg"   cx="26" cy="26" r="22"/>
+            <circle class="ring-fill" id="ringFill" cx="26" cy="26" r="22"/>
+          </svg>
+          <div class="ring-num" id="ringNum">—</div>
         </div>
+        <div class="ring-grade" id="ringGrade">Score</div>
       </div>
     </div>
-  </aside>
-
-  <!-- ░░ FOOTER ░░ -->
-  <footer class="site-footer" role="contentinfo">
-    <div class="site-footer-inner">
-      <p>StyleGuard &mdash; documentation linting for teams that care about craft.</p>
-      <button id="changelog-toggle" class="changelog-toggle-btn" type="button"
-              aria-expanded="false" aria-controls="changelog-panel">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-             aria-hidden="true" class="changelog-toggle-chevron">
-          <path d="M2 4.5L6 8.5L10 4.5" stroke="currentColor" stroke-width="1.4"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        What's new
-      </button>
+    <div class="filter-row">
+      <button class="ftab all active" onclick="setFilter('all',this)">All <span class="tc" id="tc-all">0</span></button>
+      <button class="ftab passive"    onclick="setFilter('passive',this)">Passive voice <span class="tc" id="tc-passive">0</span></button>
+      <button class="ftab weak"       onclick="setFilter('weak',this)">Weak verb <span class="tc" id="tc-weak">0</span></button>
+      <button class="ftab jargon"     onclick="setFilter('jargon',this)">Jargon <span class="tc" id="tc-jargon">0</span></button>
+      <button class="ftab long"       onclick="setFilter('long',this)">Long sentence <span class="tc" id="tc-long">0</span></button>
+      <button class="ftab filler"     onclick="setFilter('filler',this)">Filler word <span class="tc" id="tc-filler">0</span></button>
+      <div class="filter-gap"></div>
+      <button class="btn-copy" onclick="copyClean()">Copy clean</button>
     </div>
-  </footer>
+    <div class="results-pane">
+      <div class="results-empty" id="resultsEmpty">
+        <div class="re-icon">◌</div>
+        <div class="re-text">Run an analysis to see highlighted violations here.</div>
+      </div>
+      <div id="resultsList" style="display:none"></div>
+    </div>
+  </section>
 
-  <script src="app.js"></script>
+  <!-- 03 JARGON DENSITY -->
+  <section>
+    <div class="sec-head">
+      <h2 class="sec-h2"><span class="sec-num">03</span> Jargon density per paragraph</h2>
+    </div>
+    <div class="data-table" id="jargonTable">
+      <div class="dt-empty">Run an analysis to see jargon density per paragraph.</div>
+    </div>
+  </section>
+
+  <!-- 04 HEAT MAP -->
+  <section>
+    <div class="sec-head">
+      <h2 class="sec-h2"><span class="sec-num">04</span> Sentence length heat map</h2>
+    </div>
+    <div class="heatmap-wrap">
+      <div class="hm-topbar">
+        <span class="hm-legend-label">Legend</span>
+        <div class="hm-leg"><div class="hm-swatch" style="background:var(--heat-low)"></div> Short (&lt;15w)</div>
+        <div class="hm-leg"><div class="hm-swatch" style="background:var(--heat-mid)"></div> Medium (15–25w)</div>
+        <div class="hm-leg"><div class="hm-swatch" style="background:var(--heat-high)"></div> Long (&gt;25w)</div>
+      </div>
+      <div class="hm-body" id="heatmapBody">
+        <div class="hm-empty">Run an analysis to visualise sentence length across your document.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 BREAKDOWN -->
+  <section>
+    <div class="sec-head">
+      <h2 class="sec-h2"><span class="sec-num">05</span> Rule breakdown</h2>
+    </div>
+    <div class="breakdown-grid">
+      <div class="bd-cell"><div class="bd-rule">Passive voice</div><div class="bd-num" style="color:var(--red)"    id="bd-passive">0</div><div class="bd-bar-wrap"><div class="bd-bar" id="bar-passive" style="width:0%;background:var(--red)"></div></div></div>
+      <div class="bd-cell"><div class="bd-rule">Weak verb</div>    <div class="bd-num" style="color:var(--orange)" id="bd-weak">0</div><div class="bd-bar-wrap"><div class="bd-bar" id="bar-weak"    style="width:0%;background:var(--orange)"></div></div></div>
+      <div class="bd-cell"><div class="bd-rule">Long sentence</div><div class="bd-num" style="color:var(--blue)"   id="bd-long">0</div><div class="bd-bar-wrap"><div class="bd-bar" id="bar-long"    style="width:0%;background:var(--blue)"></div></div></div>
+      <div class="bd-cell"><div class="bd-rule">Filler word</div>  <div class="bd-num" style="color:var(--accent)" id="bd-filler">0</div><div class="bd-bar-wrap"><div class="bd-bar" id="bar-filler"  style="width:0%;background:var(--accent)"></div></div></div>
+      <div class="bd-cell"><div class="bd-rule">Jargon</div>       <div class="bd-num" style="color:var(--purple)" id="bd-jargon">0</div><div class="bd-bar-wrap"><div class="bd-bar" id="bar-jargon"  style="width:0%;background:var(--purple)"></div></div></div>
+    </div>
+  </section>
+
+  <!-- 06 READABILITY -->
+  <section>
+    <div class="sec-head">
+      <h2 class="sec-h2"><span class="sec-num">06</span> Readability metrics</h2>
+    </div>
+    <div class="r-grid">
+      <div class="r-cell"><div class="r-val" id="r-fk">—</div><div class="r-label">Flesch–Kincaid<br>grade level</div></div>
+      <div class="r-cell"><div class="r-val" id="r-ease">—</div><div class="r-label">Flesch reading<br>ease score</div></div>
+      <div class="r-cell"><div class="r-val" id="r-avg">—</div><div class="r-label">Avg sentence<br>length (words)</div></div>
+      <div class="r-cell hi"><div class="r-val" id="r-level">—</div><div class="r-label">Reading level<br>assessment</div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer role="contentinfo">
+  <span class="footer-text">StyleGuard Pro — documentation linting for teams that care about craft.</span>
+  <div style="flex:1"></div>
+  <a href="/about"     class="footer-link">About</a>
+  <a href="/privacy"   class="footer-link">Privacy</a>
+  <a href="/changelog" class="footer-link">What's new</a>
+</footer>
+
+<script>
+'use strict';
+
+// ── SAMPLE ──
+const SAMPLE = `The configuration settings are updated by the system administrator when new parameters are required. It should be noted that this process is utilized in order to facilitate the optimization of the workflow pipeline. The utilization of these parameters will be effectuated at the commencement of the next deployment cycle.
+
+Validation errors were encountered during the initialization phase. The error messages are generated by the logging module and are displayed to the user. It is recommended that the user should review the API documentation prior to making modifications to the codebase.
+
+The feature set has been expanded by the engineering team to include support for multiple data formats. These formats are parsed by the ingestion engine before being committed to the database. A significant number of legacy integrations will be impacted by this change and should be updated as soon as possible.`;
+
+// ── RULES ──
+// fix = plain text replacement applied directly to textarea. null = delete.
+const WEAK_VERBS = {
+  utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+  leverage:'use', leverages:'uses', leveraged:'used', leveraging:'using',
+  facilitate:'enable', facilitates:'enables', facilitated:'enabled', facilitating:'enabling',
+  implement:'add', implements:'adds', implemented:'added', implementing:'adding',
+  effectuate:'apply', effectuated:'applied', effectuates:'applies',
+  commence:'start', commences:'starts', commenced:'started', commencement:'start',
+  endeavour:'try', endeavor:'try', utilisation:'use', utilization:'use',
+};
+
+const JARGON = [
+  'pipeline','workflow pipeline','ingestion engine','codebase','deployment cycle',
+  'initialization','parameterization','optimization','synergy','scalability',
+  'paradigm','ecosystem','bandwidth','drill down','circle back',
+  'low-hanging fruit','move the needle','boil the ocean','deep dive',
+];
+
+const FILLERS = [
+  { p:'it should be noted that', fix:null,        label:'Delete — adds no meaning.' },
+  { p:'it is important to note', fix:null,        label:'Delete — adds no meaning.' },
+  { p:'in order to',             fix:'to',        label:'Replace with: <strong>to</strong>' },
+  { p:'due to the fact that',    fix:'because',   label:'Replace with: <strong>because</strong>' },
+  { p:'at this point in time',   fix:'now',       label:'Replace with: <strong>now</strong>' },
+  { p:'prior to',                fix:'before',    label:'Replace with: <strong>before</strong>' },
+  { p:'a significant number of', fix:'many',      label:'Replace with: <strong>many</strong>' },
+  { p:'on a regular basis',      fix:'regularly', label:'Replace with: <strong>regularly</strong>' },
+  { p:'in the event that',       fix:'if',        label:'Replace with: <strong>if</strong>' },
+];
+
+// ── STATE ──
+let violations  = [];  // array of violation objects
+let activeFilter = 'all';
+let hlOn = true;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('docInput').value = SAMPLE;
+  updateCounts();
+  setupDragDrop();
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); runAnalysis(); }
+  });
+});
+
+// ── COUNTS ──
+function updateCounts() {
+  var t = document.getElementById('docInput').value;
+  var w = t.trim() ? t.trim().split(/\s+/).length : 0;
+  document.getElementById('charCount').textContent = t.length.toLocaleString() + ' chars';
+  document.getElementById('wordCount').textContent = w.toLocaleString() + ' words';
+}
+
+function onInput() {
+  updateCounts();
+  if (hlOn && violations.length) renderHL();
+}
+
+// ── CLEAR ──
+function clearDoc() {
+  document.getElementById('docInput').value = '';
+  document.getElementById('hlLayer').innerHTML = '';
+  updateCounts();
+  resetUI();
+}
+
+function resetUI() {
+  violations = [];
+  document.getElementById('resultsEmpty').style.display = 'flex';
+  document.getElementById('resultsList').style.display  = 'none';
+  document.getElementById('jargonTable').innerHTML = '<div class="dt-empty">Run an analysis to see jargon density per paragraph.</div>';
+  document.getElementById('heatmapBody').innerHTML = '<div class="hm-empty">Run an analysis to visualise sentence length across your document.</div>';
+  ['errors','warnings','suggestions','clean'].forEach(function(k) {
+    document.getElementById('sc-' + k).textContent = '—';
+  });
+  document.getElementById('ringNum').textContent   = '—';
+  document.getElementById('ringGrade').textContent = 'Score';
+  document.getElementById('ringFill').style.strokeDashoffset = '138';
+  ['passive','weak','long','filler','jargon'].forEach(function(k) {
+    document.getElementById('tc-' + k).textContent = '0';
+    document.getElementById('bd-' + k).textContent = '0';
+    document.getElementById('bar-' + k).style.width = '0%';
+  });
+  document.getElementById('tc-all').textContent = '0';
+  ['fk','ease','avg','level'].forEach(function(k) {
+    var el = document.getElementById('r-' + k);
+    el.textContent = '—'; el.className = 'r-val';
+  });
+}
+
+// ── ANALYSE ──
+function runAnalysis() {
+  var text = document.getElementById('docInput').value.trim();
+  if (!text) return;
+  var btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  setTimeout(function() { analyse(text); btn.disabled = false; btn.textContent = 'Analyze ⌘↵'; }, 480);
+}
+
+function analyse(text) {
+  var sentences  = splitSen(text);
+  var paragraphs = text.split(/\n\n+/).filter(function(p) { return p.trim(); });
+  var found = [];
+
+  sentences.forEach(function(sen, si) {
+    var ref   = 'S' + (si + 1);
+    var words = sen.split(/\s+/).filter(Boolean);
+
+    // Passive voice
+    var pr = /\b(is|are|was|were|be|been|being)\s+(\w+(?:ed|en))\b/gi;
+    var m;
+    while ((m = pr.exec(sen)) !== null) {
+      found.push({
+        type:'passive', sev:'error', sen:sen, raw:m[0], fix:null, ref:ref,
+        sugg:'Rewrite in active voice — identify the actor and put them first.'
+      });
+    }
+
+    // Weak verbs
+    words.forEach(function(raw) {
+      var w = raw.replace(/[^a-z]/gi,'').toLowerCase();
+      if (WEAK_VERBS[w]) {
+        found.push({
+          type:'weak', sev:'warning', sen:sen, raw:w, fix:WEAK_VERBS[w], ref:ref,
+          sugg:'Replace <strong>' + w + '</strong> → <strong>' + WEAK_VERBS[w] + '</strong>'
+        });
+      }
+    });
+
+    // Filler phrases
+    FILLERS.forEach(function(f) {
+      if (sen.toLowerCase().indexOf(f.p) !== -1) {
+        found.push({
+          type:'filler', sev:'warning', sen:sen, raw:f.p, fix:f.fix, ref:ref,
+          sugg:f.label
+        });
+      }
+    });
+
+    // Long sentences
+    if (words.length > 25) {
+      found.push({
+        type:'long', sev:'warning', sen:sen, raw:sen, fix:null, ref:ref,
+        sugg:words.length + ' words — aim for under 25. <strong>Split into two sentences.</strong>'
+      });
+    }
+
+    // Jargon
+    JARGON.forEach(function(term) {
+      if (sen.toLowerCase().indexOf(term.toLowerCase()) !== -1) {
+        found.push({
+          type:'jargon', sev:'suggestion', sen:sen, raw:term, fix:null, ref:ref,
+          sugg:'Define <strong>"' + term + '"</strong> on first use, or replace with a plainer alternative.'
+        });
+      }
+    });
+  });
+
+  // Deduplicate
+  var seen = {};
+  violations = found.filter(function(v) {
+    var k = v.type + v.ref + v.raw.toLowerCase();
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  });
+
+  updateScoreCounts(sentences);
+  renderJargon(paragraphs);
+  renderHeatmap(sentences);
+  if (hlOn) renderHL();
+  renderResults();
+}
+
+// ── SCORE / COUNTS ──
+function updateScoreCounts(sentences) {
+  if (!sentences) sentences = splitSen(document.getElementById('docInput').value);
+
+  var cnt = { passive:0, weak:0, long:0, filler:0, jargon:0 };
+  var errors = 0, warnings = 0, suggestions = 0;
+
+  violations.forEach(function(v) {
+    cnt[v.type]++;
+    if      (v.sev === 'error')      errors++;
+    else if (v.sev === 'warning')    warnings++;
+    else                             suggestions++;
+  });
+
+  var senCount   = Math.max(1, sentences.length);
+  var penalty    = Math.min(90, Math.round((errors/senCount)*50 + (warnings/senCount)*25 + (suggestions/senCount)*10));
+  var score      = violations.length === 0 ? 100 : Math.max(5, 100 - penalty);
+  var cleanSen   = Math.max(0, sentences.length - Object.keys(violations.reduce(function(acc,v){ acc[v.ref]=1; return acc; },{})).length);
+  var grade      = score >= 85 ? 'Excellent' : score >= 70 ? 'Good' : score >= 50 ? 'Fair' : 'Needs work';
+  var rColor     = score >= 85 ? 'var(--green)' : score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--orange)' : 'var(--red)';
+
+  document.getElementById('sc-errors').textContent      = errors;
+  document.getElementById('sc-warnings').textContent    = warnings;
+  document.getElementById('sc-suggestions').textContent = suggestions;
+  document.getElementById('sc-clean').textContent       = cleanSen;
+  document.getElementById('ringNum').textContent        = score;
+  document.getElementById('ringGrade').textContent      = grade;
+  var rf = document.getElementById('ringFill');
+  rf.style.strokeDashoffset = 138 - (138 * score / 100);
+  rf.style.stroke = rColor;
+
+  document.getElementById('tc-all').textContent = violations.length;
+  Object.keys(cnt).forEach(function(k) {
+    document.getElementById('tc-' + k).textContent = cnt[k];
+    document.getElementById('bd-' + k).textContent = cnt[k];
+  });
+  var maxC = Math.max(1, cnt.passive, cnt.weak, cnt.long, cnt.filler, cnt.jargon);
+  Object.keys(cnt).forEach(function(k) {
+    document.getElementById('bar-' + k).style.width = Math.round((cnt[k]/maxC)*100) + '%';
+  });
+}
+
+// ── JARGON DENSITY ──
+function renderJargon(paragraphs) {
+  var rows = paragraphs.map(function(p, i) {
+    var wc   = p.split(/\s+/).filter(Boolean).length;
+    var hits = JARGON.filter(function(j) { return p.toLowerCase().indexOf(j.toLowerCase()) !== -1; });
+    var dens = wc > 0 ? Math.round((hits.length / wc) * 100) : 0;
+    var cls  = hits.length === 0 ? 'none' : hits.length <= 1 ? 'low' : hits.length <= 3 ? 'medium' : 'high';
+    var bc   = hits.length === 0 ? 'var(--border-hi)' : hits.length <= 1 ? 'var(--blue)' : hits.length <= 3 ? 'var(--orange)' : 'var(--red)';
+    var prev = p.substring(0,60).replace(/\n/g,' ') + (p.length > 60 ? '…' : '');
+    return { i:i, prev:prev, hits:hits.length, dens:dens, cls:cls, bc:bc };
+  });
+  var maxH = Math.max(1, rows.reduce(function(m,r){ return Math.max(m,r.hits); }, 0));
+  var html = '<div class="dt-header"><span>#</span><span>Paragraph</span><span style="text-align:right">Jargon</span><span>Density</span></div>';
+  rows.forEach(function(r) {
+    html += '<div class="dt-row">'
+      + '<div class="dt-num">' + (r.i+1) + '</div>'
+      + '<div class="dt-preview">' + esc(r.prev) + '</div>'
+      + '<div class="dt-count ' + r.cls + '">' + (r.hits === 0 ? '—' : r.hits) + '</div>'
+      + '<div class="dt-bar-wrap"><div class="dt-bar-bg"><div class="dt-bar" style="width:' + Math.round((r.hits/maxH)*100) + '%;background:' + r.bc + '"></div></div>'
+      + '<div class="dt-pct">' + r.dens + '%</div></div>'
+      + '</div>';
+  });
+  document.getElementById('jargonTable').innerHTML = html;
+}
+
+// ── HEAT MAP ──
+function renderHeatmap(sentences) {
+  var html = sentences.map(function(s) {
+    var wc  = s.split(/\s+/).filter(Boolean).length;
+    var cls = wc < 15 ? 'low' : wc <= 25 ? 'mid' : 'high';
+    return '<span class="hs ' + cls + '" title="' + wc + ' words">' + esc(s) + ' </span>';
+  }).join('');
+  document.getElementById('heatmapBody').innerHTML = html || '<div class="hm-empty">No sentences found.</div>';
+}
+
+// ── HIGHLIGHT LAYER ──
+function renderHL() {
+  var layer = document.getElementById('hlLayer');
+  if (!hlOn) { layer.innerHTML = ''; return; }
+  var text  = document.getElementById('docInput').value;
+  var spans = [];
+
+  violations.filter(function(v) { return v.type !== 'long'; }).forEach(function(v) {
+    var re = new RegExp(escRe(v.raw), 'gi');
+    var m;
+    while ((m = re.exec(text)) !== null) {
+      spans.push({ start:m.index, end:m.index + m[0].length, type:v.type, val:m[0] });
+    }
+  });
+
+  spans.sort(function(a,b) { return a.start - b.start; });
+  var merged = [];
+  spans.forEach(function(s) {
+    var last = merged[merged.length - 1];
+    if (!last || s.start >= last.end) merged.push(s);
+  });
+
+  var html = '', cur = 0;
+  merged.forEach(function(s) {
+    html += esc(text.slice(cur, s.start));
+    html += '<mark class="' + s.type + '">' + esc(s.val) + '</mark>';
+    cur = s.end;
+  });
+  html += esc(text.slice(cur));
+  layer.innerHTML = html;
+}
+
+function toggleHighlight() {
+  hlOn = !hlOn;
+  var btn = document.getElementById('hlToggle');
+  btn.classList.toggle('on', hlOn);
+  btn.textContent = 'highlights ' + (hlOn ? 'on' : 'off');
+  hlOn ? renderHL() : (document.getElementById('hlLayer').innerHTML = '');
+}
+
+// ── RENDER RESULTS ──
+var LABELS = { passive:'Passive voice', weak:'Weak verb', jargon:'Jargon', long:'Long sentence', filler:'Filler word' };
+
+function renderResults() {
+  var list  = document.getElementById('resultsList');
+  var empty = document.getElementById('resultsEmpty');
+  var filtered = activeFilter === 'all' ? violations : violations.filter(function(v) { return v.type === activeFilter; });
+
+  if (!filtered.length) {
+    list.style.display  = 'none';
+    empty.style.display = 'flex';
+    empty.querySelector('.re-text').textContent =
+      violations.length === 0 ? 'Run an analysis to see highlighted violations here.' : '✓ No violations for this filter.';
+    return;
+  }
+
+  empty.style.display = 'none';
+  list.style.display  = 'block';
+
+  var html = '';
+  filtered.forEach(function(v, i) {
+    // Store index into violations array as data attribute
+    var vidx = violations.indexOf(v);
+    var disp = v.type === 'long'
+      ? esc(v.sen.substring(0,90)) + (v.sen.length > 90 ? '…' : '')
+      : esc(v.sen).replace(new RegExp('(' + escRe(esc(v.raw)) + ')', 'gi'), '<mark class="' + v.type + '">$1</mark>');
+
+    html += '<div class="vio" data-idx="' + vidx + '" style="animation-delay:' + (i*0.03) + 's">'
+      + '<div class="vtag ' + v.type + '">' + LABELS[v.type] + '</div>'
+      + '<div>'
+        + '<div class="vflagged">"' + disp + '"</div>'
+        + '<div class="vsugg">→ ' + v.sugg + '</div>'
+      + '</div>'
+      + '<div class="vactions">'
+        + '<div class="vline">' + v.ref + '</div>'
+        + '<button class="btn-fix"    onclick="applyFix(this)">Apply fix</button>'
+        + '<button class="btn-ignore" onclick="ignoreVio(this)">Ignore</button>'
+      + '</div>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+// ── FILTER ──
+function setFilter(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  renderResults();
+}
+
+// ── APPLY FIX ──
+// Reads the violation directly from the violations array by index.
+// Applies text replacement to the textarea, then removes violation and refreshes all UI.
+function applyFix(btn) {
+  var row = btn.closest('.vio');
+  var idx = parseInt(row.getAttribute('data-idx'), 10);
+  var v   = violations[idx];
+  if (!v) return;
+
+  var ta  = document.getElementById('docInput');
+  var txt = ta.value;
+
+  if (v.type === 'weak' && v.fix) {
+    // Replace the weak verb — use a case-insensitive literal string replace
+    // indexOf gives us the exact position so we don't need \b
+    var pos = txt.toLowerCase().indexOf(v.raw.toLowerCase());
+    if (pos !== -1) {
+      txt = txt.slice(0, pos) + v.fix + txt.slice(pos + v.raw.length);
+    }
+    ta.value = txt;
+    updateCounts();
+
+  } else if (v.type === 'filler') {
+    if (v.fix) {
+      // Replace filler phrase with its one-word fix
+      var fi = txt.toLowerCase().indexOf(v.raw.toLowerCase());
+      if (fi !== -1) {
+        txt = txt.slice(0, fi) + v.fix + txt.slice(fi + v.raw.length);
+      }
+    } else {
+      // Delete the filler phrase entirely
+      var di = txt.toLowerCase().indexOf(v.raw.toLowerCase());
+      if (di !== -1) {
+        // Also eat a following space if present
+        var end = di + v.raw.length;
+        if (txt[end] === ' ') end++;
+        txt = txt.slice(0, di) + txt.slice(end);
+      }
+      txt = txt.replace(/  +/g, ' ').trim();
+    }
+    ta.value = txt;
+    updateCounts();
+  }
+  // passive / long / jargon: no mechanical fix — remove card, leave text for writer
+
+  // Remove violation from array and refresh everything
+  violations.splice(idx, 1);
+  var sentences = splitSen(document.getElementById('docInput').value);
+  updateScoreCounts(sentences);
+
+  // Animate card out, then re-render results (re-renders indices)
+  row.style.transition = 'opacity .2s, transform .2s';
+  row.style.opacity    = '0';
+  row.style.transform  = 'translateX(8px)';
+  setTimeout(function() {
+    renderResults();
+    if (hlOn) renderHL();
+  }, 220);
+}
+
+// ── IGNORE ──
+function ignoreVio(btn) {
+  var row = btn.closest('.vio');
+  var idx = parseInt(row.getAttribute('data-idx'), 10);
+  violations.splice(idx, 1);
+  var sentences = splitSen(document.getElementById('docInput').value);
+  updateScoreCounts(sentences);
+  row.style.transition = 'opacity .2s';
+  row.style.opacity    = '0';
+  setTimeout(function() { renderResults(); if (hlOn) renderHL(); }, 200);
+}
+
+// ── COPY CLEAN ──
+function copyClean() {
+  var text = document.getElementById('docInput').value;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(function(){});
+  }
+  var btn = document.querySelector('.btn-copy');
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy clean'; }, 1500);
+}
+
+// ── EXPORT ──
+function exportReport() {
+  var score = document.getElementById('ringNum').textContent;
+  var lines = ['StyleGuard Pro — Analysis Report', '====================================',
+    'Score: ' + score + '/100  ·  Violations: ' + violations.length, ''];
+  violations.forEach(function(v, i) {
+    lines.push((i+1) + '. [' + v.type.toUpperCase() + '] ' + v.ref);
+    lines.push('   "' + v.sen.substring(0,80) + '"');
+    lines.push('   → ' + v.sugg.replace(/<[^>]+>/g,''));
+    lines.push('');
+  });
+  lines.push('Generated by StyleGuard Pro — https://styleguard.ai-engineer.app');
+  var blob = new Blob([lines.join('\n')], { type:'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'styleguard-report.txt';
+  a.click();
+}
+
+// ── THEME ──
+function toggleTheme() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = isDark ? 'Dark' : 'Light';
+  if (hlOn && violations.length) renderHL();
+}
+
+// ── DRAG & DROP ──
+function setupDragDrop() {
+  var ta = document.getElementById('docInput');
+  ta.addEventListener('dragover', function(e) { e.preventDefault(); });
+  ta.addEventListener('drop', function(e) {
+    e.preventDefault();
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function(ev) { ta.value = ev.target.result; updateCounts(); };
+    r.readAsText(file);
+  });
+}
+
+// ── UTILS ──
+function splitSen(t) {
+  return t.split(/(?<=[.!?])\s+/).filter(function(s) { return s.trim().length > 0; });
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function escRe(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+</script>
 </body>
 </html>
