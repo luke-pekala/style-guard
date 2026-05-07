@@ -71,8 +71,8 @@ body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--tex
 .hl-toggle{font-size:.65rem;color:var(--text-dim);background:none;border:1px solid var(--border);padding:2px 8px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;letter-spacing:.04em}
 .hl-toggle:hover{border-color:var(--border-hi);color:var(--text)}
 .hl-toggle.on{border-color:var(--accent);color:var(--accent)}
-.editor-body{position:relative}
-.hl-layer{position:absolute;inset:0;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.75;white-space:pre-wrap;word-wrap:break-word;color:transparent;pointer-events:none;overflow:hidden;tab-size:2}
+.editor-body{position:relative;overflow:hidden}
+.hl-layer{position:absolute;inset:0;padding:14px;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.75;white-space:pre-wrap;word-wrap:break-word;color:transparent;pointer-events:none;overflow:auto;tab-size:2;scrollbar-width:none;-ms-overflow-style:none}.hl-layer::-webkit-scrollbar{display:none}
 .hl-layer mark{border-radius:1px;color:transparent}
 .hl-layer mark.passive{background:var(--red-bg);outline:1px solid rgba(224,96,96,0.25)}
 .hl-layer mark.weak{background:var(--orange-bg);outline:1px solid rgba(224,136,64,0.25)}
@@ -254,7 +254,9 @@ footer{border-top:1px solid var(--border);padding:14px 24px;display:flex;align-i
       <div class="editor-footer">
         <button class="btn-primary" id="analyzeBtn" onclick="runAnalysis()">Analyze ⌘↵</button>
         <button class="btn-secondary" onclick="clearDoc()">Clear</button>
-        <span class="drop-hint">or drag &amp; drop a .txt / .md file</span>
+        <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">⤒ Import</button>
+        <input type="file" id="fileInput" accept=".txt,.md,.docx,.pdf" style="display:none" onchange="importFile(this)">
+        <span class="drop-hint">txt · md · docx · pdf</span>
       </div>
     </div>
   </section>
@@ -729,33 +731,25 @@ function applyFix(btn) {
   var ta  = document.getElementById('docInput');
   var txt = ta.value;
 
-  if (v.type === 'weak' && v.fix) {
-    // Replace the weak verb — use a case-insensitive literal string replace
-    // indexOf gives us the exact position so we don't need \b
-    var pos = txt.toLowerCase().indexOf(v.raw.toLowerCase());
-    if (pos !== -1) {
-      txt = txt.slice(0, pos) + v.fix + txt.slice(pos + v.raw.length);
-    }
-    ta.value = txt;
-    updateCounts();
-
-  } else if (v.type === 'filler') {
-    if (v.fix) {
-      // Replace filler phrase with its one-word fix
-      var fi = txt.toLowerCase().indexOf(v.raw.toLowerCase());
-      if (fi !== -1) {
-        txt = txt.slice(0, fi) + v.fix + txt.slice(fi + v.raw.length);
+  if ((v.type === 'weak' || v.type === 'filler') && v.fix !== undefined) {
+    // Use split+join for reliable case-insensitive replacement — no regex escaping needed
+    var lowerTxt = txt.toLowerCase();
+    var lowerRaw = v.raw.toLowerCase();
+    var idx2 = lowerTxt.indexOf(lowerRaw);
+    if (idx2 !== -1) {
+      if (v.fix) {
+        // Replace phrase with fix word
+        txt = txt.slice(0, idx2) + v.fix + txt.slice(idx2 + v.raw.length);
+      } else {
+        // Delete phrase — eat trailing space/comma too
+        var endIdx = idx2 + v.raw.length;
+        while (endIdx < txt.length && (txt[endIdx] === ' ' || txt[endIdx] === ',')) endIdx++;
+        txt = txt.slice(0, idx2) + txt.slice(endIdx);
+        // Capitalise start of sentence if deletion left a lowercase letter after '. '
+        txt = txt.replace(/([.!?]\s+)([a-z])/g, function(m, p1, p2) { return p1 + p2.toUpperCase(); });
+        // Clean double spaces
+        txt = txt.replace(/  +/g, ' ').trim();
       }
-    } else {
-      // Delete the filler phrase entirely
-      var di = txt.toLowerCase().indexOf(v.raw.toLowerCase());
-      if (di !== -1) {
-        // Also eat a following space if present
-        var end = di + v.raw.length;
-        if (txt[end] === ' ') end++;
-        txt = txt.slice(0, di) + txt.slice(end);
-      }
-      txt = txt.replace(/  +/g, ' ').trim();
     }
     ta.value = txt;
     updateCounts();
@@ -835,10 +829,110 @@ function setupDragDrop() {
     e.preventDefault();
     var file = e.dataTransfer.files[0];
     if (!file) return;
-    var r = new FileReader();
-    r.onload = function(ev) { ta.value = ev.target.result; updateCounts(); };
-    r.readAsText(file);
+    handleFile(file);
   });
+  // Sync highlight layer scroll with textarea scroll
+  ta.addEventListener('scroll', function() {
+    var layer = document.getElementById('hlLayer');
+    layer.scrollTop  = ta.scrollTop;
+    layer.scrollLeft = ta.scrollLeft;
+  });
+}
+
+// ── FILE IMPORT (txt, md, docx, pdf) ──
+function importFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  handleFile(file);
+  input.value = ''; // reset so same file can be re-imported
+}
+
+function handleFile(file) {
+  var name = file.name.toLowerCase();
+  var btn  = document.getElementById('analyzeBtn');
+
+  if (name.endsWith('.txt') || name.endsWith('.md')) {
+    // Plain text — read directly
+    var r = new FileReader();
+    r.onload = function(ev) {
+      document.getElementById('docInput').value = ev.target.result;
+      updateCounts();
+    };
+    r.readAsText(file);
+
+  } else if (name.endsWith('.docx')) {
+    // Word document — use mammoth.js
+    btn.textContent = 'Reading…'; btn.disabled = true;
+    if (typeof mammoth === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+      s.onload = function() { readDocx(file, btn); };
+      document.head.appendChild(s);
+    } else {
+      readDocx(file, btn);
+    }
+
+  } else if (name.endsWith('.pdf')) {
+    // PDF — use pdf.js
+    btn.textContent = 'Reading…'; btn.disabled = true;
+    if (typeof pdfjsLib === 'undefined') {
+      var s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s2.onload = function() {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        readPdf(file, btn);
+      };
+      document.head.appendChild(s2);
+    } else {
+      readPdf(file, btn);
+    }
+
+  } else {
+    alert('Supported formats: .txt  .md  .docx  .pdf');
+  }
+}
+
+function readDocx(file, btn) {
+  var r = new FileReader();
+  r.onload = function(ev) {
+    mammoth.extractRawText({ arrayBuffer: ev.target.result })
+      .then(function(result) {
+        document.getElementById('docInput').value = result.value.trim();
+        updateCounts();
+        btn.textContent = 'Analyze ⌘↵'; btn.disabled = false;
+      })
+      .catch(function(err) {
+        alert('Could not read .docx file: ' + err.message);
+        btn.textContent = 'Analyze ⌘↵'; btn.disabled = false;
+      });
+  };
+  r.readAsArrayBuffer(file);
+}
+
+function readPdf(file, btn) {
+  var r = new FileReader();
+  r.onload = function(ev) {
+    pdfjsLib.getDocument({ data: ev.target.result }).promise.then(function(pdf) {
+      var pages = [];
+      var total = pdf.numPages;
+      for (var i = 1; i <= total; i++) {
+        pages.push(pdf.getPage(i).then(function(page) {
+          return page.getTextContent().then(function(tc) {
+            return tc.items.map(function(item) { return item.str; }).join(' ');
+          });
+        }));
+      }
+      Promise.all(pages).then(function(texts) {
+        document.getElementById('docInput').value = texts.join('\n\n').trim();
+        updateCounts();
+        btn.textContent = 'Analyze ⌘↵'; btn.disabled = false;
+      });
+    }).catch(function(err) {
+      alert('Could not read .pdf file: ' + err.message);
+      btn.textContent = 'Analyze ⌘↵'; btn.disabled = false;
+    });
+  };
+  r.readAsArrayBuffer(file);
 }
 
 // ── UTILS ──
