@@ -217,10 +217,10 @@ footer{border-top:1px solid var(--border);padding:14px 24px;display:flex;align-i
     <span class="logo-desc">&nbsp;documentation style checker</span>
   </a>
   <div class="topbar-right">
-    <select class="sg-select" id="styleGuide" aria-label="Select style guide">
+    <select class="sg-select" id="styleGuide" aria-label="Select style guide" onchange="switchGuide(this.value)">
       <option>Microsoft Style Guide</option>
-      <option>Chicago Manual of Style</option>
       <option>Google Developer Docs</option>
+      <option>Chicago Manual of Style</option>
       <option>APA 7th Edition</option>
       <option>Custom Rules</option>
     </select>
@@ -376,41 +376,213 @@ Validation errors were encountered during the initialization phase. The error me
 
 The feature set has been expanded by the engineering team to include support for multiple data formats. These formats are parsed by the ingestion engine before being committed to the database. A significant number of legacy integrations will be impacted by this change and should be updated as soon as possible.`;
 
-// ── RULES ──
-// fix = plain text replacement applied directly to textarea. null = delete.
-const WEAK_VERBS = {
-  utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
-  leverage:'use', leverages:'uses', leveraged:'used', leveraging:'using',
-  facilitate:'enable', facilitates:'enables', facilitated:'enabled', facilitating:'enabling',
-  implement:'add', implements:'adds', implemented:'added', implementing:'adding',
-  effectuate:'apply', effectuated:'applied', effectuates:'applies',
-  commence:'start', commences:'starts', commenced:'started', commencement:'start',
-  endeavour:'try', endeavor:'try', utilisation:'use', utilization:'use',
+// ── STYLE GUIDE RULE SETS ──
+// Each guide defines: weakVerbs, jargon, fillers, maxSentenceWords, passiveSeverity, extraRules
+// passiveSeverity: 'error' = strict, 'warning' = moderate, 'suggestion' = permissive
+
+const STYLE_GUIDES = {
+
+  // ── MICROSOFT STYLE GUIDE ──
+  // Source: learn.microsoft.com/en-us/style-guide
+  // Active voice strongly preferred. Short sentences (<25w). No jargon. Plain language.
+  'Microsoft Style Guide': {
+    maxSentenceWords: 25,
+    passiveSeverity: 'error',
+    passiveNote: 'Microsoft style strongly prefers active voice. Identify the actor and put them first.',
+    weakVerbs: {
+      utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+      leverage:'use', leverages:'uses', leveraged:'used', leveraging:'using',
+      facilitate:'enable', facilitates:'enables', facilitated:'enabled', facilitating:'enabling',
+      implement:'add', implements:'adds', implemented:'added', implementing:'adding',
+      effectuate:'apply', effectuated:'applied', effectuates:'applies',
+      commence:'start', commences:'starts', commenced:'started', commencement:'start',
+      endeavour:'try', endeavor:'try', utilisation:'use', utilization:'use',
+      remediate:'fix', remediates:'fixes', remediated:'fixed',
+      leverage:'use', procure:'get', procures:'gets', procured:'got',
+    },
+    jargon: [
+      'pipeline','workflow pipeline','ingestion engine','codebase','deployment cycle',
+      'initialization','parameterization','optimization','synergy','scalability',
+      'paradigm','ecosystem','bandwidth','drill down','circle back',
+      'low-hanging fruit','move the needle','boil the ocean','deep dive',
+      'actionable','learnings','ideation','onboarding','offboarding',
+    ],
+    fillers: [
+      { p:'it should be noted that',  fix:null,        label:'Microsoft style: Delete — adds no meaning.' },
+      { p:'it is important to note',  fix:null,        label:'Microsoft style: Delete — adds no meaning.' },
+      { p:'in order to',              fix:'to',        label:'Microsoft style: Replace with <strong>to</strong>' },
+      { p:'due to the fact that',     fix:'because',   label:'Microsoft style: Replace with <strong>because</strong>' },
+      { p:'at this point in time',    fix:'now',       label:'Microsoft style: Replace with <strong>now</strong>' },
+      { p:'prior to',                 fix:'before',    label:'Microsoft style: Replace with <strong>before</strong>' },
+      { p:'a significant number of',  fix:'many',      label:'Microsoft style: Replace with <strong>many</strong>' },
+      { p:'on a regular basis',       fix:'regularly', label:'Microsoft style: Replace with <strong>regularly</strong>' },
+      { p:'in the event that',        fix:'if',        label:'Microsoft style: Replace with <strong>if</strong>' },
+      { p:'at the present time',      fix:'now',       label:'Microsoft style: Replace with <strong>now</strong>' },
+      { p:'needless to say',          fix:null,        label:'Microsoft style: Delete — if it is needless to say, do not say it.' },
+    ],
+    extraRules: [
+      { pattern: /the user/gi, type:'filler', sev:'warning',
+        label:'Microsoft style: Address the reader directly. Replace <strong>"the user"</strong> with <strong>"you"</strong>.' },
+    ],
+  },
+
+  // ── GOOGLE DEVELOPER DOCUMENTATION STYLE GUIDE ──
+  // Source: developers.google.com/style
+  // Strictest on sentence length (<20w). Active voice. Second person required. No pre-announcements.
+  'Google Developer Docs': {
+    maxSentenceWords: 20,
+    passiveSeverity: 'error',
+    passiveNote: 'Google style requires active voice. Passive is only acceptable to emphasise an object or when the actor is irrelevant.',
+    weakVerbs: {
+      utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+      commence:'start', commences:'starts', commenced:'started', commencement:'start',
+      facilitate:'enable', facilitates:'enables', facilitated:'enabled', facilitating:'enabling',
+      leverage:'use', leverages:'uses', leveraged:'used', leveraging:'using',
+      effectuate:'apply', effectuated:'applied',
+    },
+    jargon: [
+      'pipeline','ingestion engine','codebase','deployment cycle',
+      'synergy','scalability','paradigm','single pane of glass',
+      'spin up','guru','deep dive','low-hanging fruit','boil the ocean',
+    ],
+    fillers: [
+      { p:'it should be noted that',     fix:null,    label:'Google style: Delete — do not pre-announce content.' },
+      { p:'this document will explain',  fix:null,    label:'Google style: Delete — do not pre-announce. Just explain it.' },
+      { p:'this guide will cover',       fix:null,    label:'Google style: Delete — do not pre-announce. Just cover it.' },
+      { p:'please note that',            fix:null,    label:'Google style: Delete — adds no meaning.' },
+      { p:'in order to',                 fix:'to',    label:'Google style: Replace with <strong>to</strong>' },
+      { p:'allows you to',               fix:null,    label:'Google style: Rewrite — "allows you to" is on the Google banned word list. Say what the feature does instead.' },
+      { p:'prior to',                    fix:'before',label:'Google style: Replace with <strong>before</strong>' },
+      { p:'a significant number of',     fix:'many',  label:'Google style: Replace with <strong>many</strong>' },
+      { p:'due to the fact that',        fix:'because',label:'Google style: Replace with <strong>because</strong>' },
+    ],
+    extraRules: [
+      { pattern: /the user/gi, type:'filler', sev:'error',
+        label:'Google style: Use <strong>"you"</strong> not "the user" — address the reader directly (required by Google style guide).' },
+      { pattern: /desire|wish/gi, type:'weak', sev:'warning',
+        label:'Google style: "desire" and "wish" are on the Google banned word list. Use <strong>want</strong>.' },
+    ],
+  },
+
+  // ── CHICAGO MANUAL OF STYLE ──
+  // Source: chicagomanualofstyle.org
+  // Most permissive on passive. No strict sentence limit (35w). Focus on clichés, redundancies, elegance.
+  'Chicago Manual of Style': {
+    maxSentenceWords: 35,
+    passiveSeverity: 'suggestion',
+    passiveNote: 'Chicago style permits passive voice — "a mix of active and passive is essential for variation and eloquence." Consider revising only if the actor is obscured.',
+    weakVerbs: {
+      utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+      commence:'start', commences:'starts', commenced:'started', commencement:'start',
+      endeavour:'try', endeavor:'try', effectuate:'apply', effectuated:'applied',
+    },
+    jargon: [
+      'synergy','scalability','paradigm','ecosystem','actionable',
+      'learnings','ideation','bandwidth','deep dive','circle back',
+    ],
+    fillers: [
+      { p:'it should be noted that',  fix:null,        label:'Chicago style: Redundant phrase — delete.' },
+      { p:'needless to say',          fix:null,        label:'Chicago style: Cliché — delete. If it is needless to say, do not say it.' },
+      { p:'in actual fact',           fix:null,        label:'Chicago style: Redundant — delete. "In fact" is sufficient, or omit entirely.' },
+      { p:'the fact that',            fix:null,        label:'Chicago style: Often redundant — consider rewriting to eliminate.' },
+      { p:'in terms of',              fix:null,        label:'Chicago style: Vague filler — rewrite for precision.' },
+      { p:'at this point in time',    fix:'now',       label:'Chicago style: Verbose — replace with <strong>now</strong>.' },
+      { p:'due to the fact that',     fix:'because',   label:'Chicago style: Replace with <strong>because</strong>.' },
+      { p:'in order to',              fix:'to',        label:'Chicago style: Replace with <strong>to</strong>.' },
+      { p:'a significant number of',  fix:'many',      label:'Chicago style: Replace with <strong>many</strong>.' },
+    ],
+    extraRules: [],
+  },
+
+  // ── APA 7TH EDITION ──
+  // Source: apastyle.apa.org
+  // Passive permitted (esp. in methods). Formal academic tone. Bias-free language required.
+  // Stricter on inclusive language than other guides.
+  'APA 7th Edition': {
+    maxSentenceWords: 40,
+    passiveSeverity: 'suggestion',
+    passiveNote: 'APA 7 permits passive voice, especially in methods sections. However, prefer active voice for clarity when describing your own actions or participants.',
+    weakVerbs: {
+      utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+      commence:'start', commenced:'started', commencement:'start',
+      endeavour:'try', endeavor:'try',
+    },
+    jargon: [
+      'synergy','paradigm','ecosystem','actionable','bandwidth',
+      'circle back','deep dive','low-hanging fruit',
+    ],
+    fillers: [
+      { p:'it should be noted that',  fix:null,    label:'APA style: Delete — direct statement is clearer.' },
+      { p:'it is interesting to note', fix:null,   label:'APA style: Delete — APA Publication Manual flags this as padding.' },
+      { p:'needless to say',          fix:null,    label:'APA style: Delete — APA flags this as redundant.' },
+      { p:'in order to',              fix:'to',    label:'APA style: Replace with <strong>to</strong>.' },
+      { p:'due to the fact that',     fix:'because',label:'APA style: Replace with <strong>because</strong>.' },
+      { p:'a significant number of',  fix:'many',  label:'APA style: Replace with <strong>many</strong>.' },
+    ],
+    extraRules: [
+      { pattern: /he or she|his or her/gi, type:'jargon', sev:'error',
+        label:'APA 7 style: Use singular <strong>they/their</strong> — APA 7 requires gender-neutral pronouns.' },
+      { pattern: /(mankind|manpower|manmade|chairman)/gi, type:'jargon', sev:'error',
+        label:'APA 7 style: Use bias-free language. Replace with <strong>humanity / workforce / artificial / chair</strong>.' },
+      { pattern: /normal(ly)?/gi, type:'jargon', sev:'suggestion',
+        label:'APA 7 style: Avoid "normal" — it implies others are abnormal. Be specific about what you mean.' },
+    ],
+  },
+
+  // ── CUSTOM RULES (editable) ──
+  'Custom Rules': {
+    maxSentenceWords: 25,
+    passiveSeverity: 'warning',
+    passiveNote: 'Custom rules: Passive voice flagged. Rewrite in active voice where possible.',
+    weakVerbs: {
+      utilize:'use', utilizes:'uses', utilized:'used', utilizing:'using',
+      leverage:'use', facilitate:'enable', facilitated:'enabled',
+      commence:'start', commenced:'started',
+    },
+    jargon: [
+      'synergy','paradigm','ecosystem','bandwidth','actionable',
+      'circle back','deep dive','low-hanging fruit','move the needle',
+    ],
+    fillers: [
+      { p:'it should be noted that',  fix:null,      label:'Delete — adds no meaning.' },
+      { p:'in order to',              fix:'to',      label:'Replace with <strong>to</strong>' },
+      { p:'due to the fact that',     fix:'because', label:'Replace with <strong>because</strong>' },
+      { p:'a significant number of',  fix:'many',    label:'Replace with <strong>many</strong>' },
+      { p:'prior to',                 fix:'before',  label:'Replace with <strong>before</strong>' },
+    ],
+    extraRules: [],
+  },
 };
 
-const JARGON = [
-  'pipeline','workflow pipeline','ingestion engine','codebase','deployment cycle',
-  'initialization','parameterization','optimization','synergy','scalability',
-  'paradigm','ecosystem','bandwidth','drill down','circle back',
-  'low-hanging fruit','move the needle','boil the ocean','deep dive',
-];
+// ── ACTIVE RULES (set by style guide selector) ──
+var activeGuide = 'Microsoft Style Guide';
 
-const FILLERS = [
-  { p:'it should be noted that', fix:null,        label:'Delete — adds no meaning.' },
-  { p:'it is important to note', fix:null,        label:'Delete — adds no meaning.' },
-  { p:'in order to',             fix:'to',        label:'Replace with: <strong>to</strong>' },
-  { p:'due to the fact that',    fix:'because',   label:'Replace with: <strong>because</strong>' },
-  { p:'at this point in time',   fix:'now',       label:'Replace with: <strong>now</strong>' },
-  { p:'prior to',                fix:'before',    label:'Replace with: <strong>before</strong>' },
-  { p:'a significant number of', fix:'many',      label:'Replace with: <strong>many</strong>' },
-  { p:'on a regular basis',      fix:'regularly', label:'Replace with: <strong>regularly</strong>' },
-  { p:'in the event that',       fix:'if',        label:'Replace with: <strong>if</strong>' },
-];
+function getGuide() {
+  return STYLE_GUIDES[activeGuide] || STYLE_GUIDES['Microsoft Style Guide'];
+}
+
+// Expose these as computed properties for the rest of the code
+function WEAK_VERBS() { return getGuide().weakVerbs; }
+function JARGON()     { return getGuide().jargon; }
+function FILLERS()    { return getGuide().fillers; }
 
 // ── STATE ──
 let violations  = [];  // array of violation objects
 let activeFilter = 'all';
 let hlOn = true;
+
+// ── SWITCH GUIDE ──
+function switchGuide(name) {
+  activeGuide = name;
+  // Update guide badge shown in topbar
+  var badge = document.getElementById('guideBadge');
+  if (badge) badge.textContent = name;
+  // If analysis has already been run, re-run it with new rules
+  var text = document.getElementById('docInput').value.trim();
+  if (violations.length > 0 && text) {
+    runAnalysis();
+  }
+}
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
@@ -481,33 +653,42 @@ function analyse(text) {
   var paragraphs = text.split(/\n\n+/).filter(function(p) { return p.trim(); });
   var found = [];
 
+  var guide         = getGuide();
+  var wv            = guide.weakVerbs;
+  var jargonList    = guide.jargon;
+  var fillerList    = guide.fillers;
+  var maxWords      = guide.maxSentenceWords;
+  var passiveSev    = guide.passiveSeverity;
+  var passiveNote   = guide.passiveNote;
+  var extraRules    = guide.extraRules || [];
+
   sentences.forEach(function(sen, si) {
     var ref   = 'S' + (si + 1);
     var words = sen.split(/\s+/).filter(Boolean);
 
-    // Passive voice
+    // Passive voice — severity and note vary by guide
     var pr = /\b(is|are|was|were|be|been|being)\s+(\w+(?:ed|en))\b/gi;
     var m;
     while ((m = pr.exec(sen)) !== null) {
       found.push({
-        type:'passive', sev:'error', sen:sen, raw:m[0], fix:null, ref:ref,
-        sugg:'Rewrite in active voice — identify the actor and put them first.'
+        type:'passive', sev:passiveSev, sen:sen, raw:m[0], fix:null, ref:ref,
+        sugg:passiveNote
       });
     }
 
-    // Weak verbs
+    // Weak verbs — from active guide
     words.forEach(function(raw) {
       var w = raw.replace(/[^a-z]/gi,'').toLowerCase();
-      if (WEAK_VERBS[w]) {
+      if (wv[w]) {
         found.push({
-          type:'weak', sev:'warning', sen:sen, raw:w, fix:WEAK_VERBS[w], ref:ref,
-          sugg:'Replace <strong>' + w + '</strong> → <strong>' + WEAK_VERBS[w] + '</strong>'
+          type:'weak', sev:'warning', sen:sen, raw:w, fix:wv[w], ref:ref,
+          sugg:'Replace <strong>' + w + '</strong> → <strong>' + wv[w] + '</strong>'
         });
       }
     });
 
-    // Filler phrases
-    FILLERS.forEach(function(f) {
+    // Filler phrases — from active guide
+    fillerList.forEach(function(f) {
       if (sen.toLowerCase().indexOf(f.p) !== -1) {
         found.push({
           type:'filler', sev:'warning', sen:sen, raw:f.p, fix:f.fix, ref:ref,
@@ -516,20 +697,34 @@ function analyse(text) {
       }
     });
 
-    // Long sentences
-    if (words.length > 25) {
+    // Long sentences — threshold from active guide
+    if (words.length > maxWords) {
       found.push({
         type:'long', sev:'warning', sen:sen, raw:sen, fix:null, ref:ref,
-        sugg:words.length + ' words — aim for under 25. <strong>Split into two sentences.</strong>'
+        sugg:words.length + ' words — ' + activeGuide + ' recommends under ' + maxWords + '. <strong>Split into two sentences.</strong>'
       });
     }
 
-    // Jargon
-    JARGON.forEach(function(term) {
+    // Jargon — from active guide
+    jargonList.forEach(function(term) {
       if (sen.toLowerCase().indexOf(term.toLowerCase()) !== -1) {
         found.push({
           type:'jargon', sev:'suggestion', sen:sen, raw:term, fix:null, ref:ref,
           sugg:'Define <strong>"' + term + '"</strong> on first use, or replace with a plainer alternative.'
+        });
+      }
+    });
+
+    // Extra rules — guide-specific patterns (APA bias-free, Google "the user", etc.)
+    extraRules.forEach(function(rule) {
+      rule.pattern.lastIndex = 0;
+      if (rule.pattern.test(sen)) {
+        rule.pattern.lastIndex = 0;
+        var em = rule.pattern.exec(sen);
+        found.push({
+          type: rule.type, sev: rule.sev, sen:sen,
+          raw: em ? em[0] : '', fix:null, ref:ref,
+          sugg: rule.label
         });
       }
     });
