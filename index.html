@@ -742,8 +742,39 @@ function analyse(text) {
   updateScoreCounts(sentences);
   renderJargon(paragraphs);
   renderHeatmap(sentences);
+  renderReadability(sentences, text);
   if (hlOn) renderHL();
   renderResults();
+}
+
+// ── READABILITY ──
+function renderReadability(sentences, text) {
+  var words   = text.split(/\s+/).filter(Boolean);
+  var wc      = words.length;
+  if (wc === 0) return;
+
+  var senCount = Math.max(1, sentences.length);
+  var avgSen   = wc / senCount;
+  var sylls    = words.reduce(function(a, w) { return a + countSyllables(w); }, 0);
+  var fkGrade  = Math.round((0.39 * avgSen + 11.8 * (sylls / wc) - 15.59) * 10) / 10;
+  var fkEase   = Math.round((206.835 - 1.015 * avgSen - 84.6 * (sylls / wc)) * 10) / 10;
+  var lvl      = fkGrade <= 6 ? 'Easy' : fkGrade <= 10 ? 'Standard' : fkGrade <= 14 ? 'Complex' : 'Technical';
+  var lvlClass = fkGrade <= 6 ? 'good' : fkGrade <= 10 ? 'ok' : 'warn';
+
+  document.getElementById('r-fk').textContent   = fkGrade;
+  document.getElementById('r-ease').textContent = fkEase;
+  document.getElementById('r-avg').textContent  = Math.round(avgSen * 10) / 10;
+  var rl = document.getElementById('r-level');
+  rl.textContent = lvl;
+  rl.className   = 'r-val ' + lvlClass;
+}
+
+function countSyllables(word) {
+  word = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (word.length <= 3) return 1;
+  word = word.replace(/(?:[^laeiouy]es|[^laeiouy]ed|[^laeiouy]e)$/, '');
+  var m = word.match(/[aeiouy]{1,2}/g);
+  return m ? Math.max(1, m.length) : 1;
 }
 
 // ── SCORE / COUNTS ──
