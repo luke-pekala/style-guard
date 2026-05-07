@@ -986,6 +986,7 @@ function applyFix(btn) {
   violations.splice(idx, 1);
   var sentences = splitSen(document.getElementById('docInput').value);
   updateScoreCounts(sentences);
+  renderReadability(sentences, document.getElementById('docInput').value);
 
   // Animate card out, then re-render results (re-renders indices)
   row.style.transition = 'opacity .2s, transform .2s';
@@ -1004,6 +1005,7 @@ function ignoreVio(btn) {
   violations.splice(idx, 1);
   var sentences = splitSen(document.getElementById('docInput').value);
   updateScoreCounts(sentences);
+  renderReadability(sentences, document.getElementById('docInput').value);
   row.style.transition = 'opacity .2s';
   row.style.opacity    = '0';
   setTimeout(function() { renderResults(); if (hlOn) renderHL(); }, 200);
